@@ -13,12 +13,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authConfig } from "@/lib/auth"
-import { cookies } from "next/headers"
 
 /**
  * 处理 POST 请求 - 用户登出
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // 第一步：获取当前用户会话
     const session = await getServerSession(authConfig)
@@ -38,9 +37,7 @@ export async function POST(request: NextRequest) {
     // await logUserActivity(session.user.id, 'LOGOUT')
     // await clearUserCache(session.user.id)
 
-    // 第三步：清除认证相关的 cookies
-    const cookieStore = cookies()
-    
+    // 第三步：准备清除认证相关的 cookies
     // 清除 NextAuth 相关的 cookies
     const authCookies = [
       'next-auth.session-token',
@@ -49,16 +46,7 @@ export async function POST(request: NextRequest) {
       '__Secure-next-auth.session-token', // HTTPS 环境下的安全 cookie
     ]
 
-    authCookies.forEach(cookieName => {
-      try {
-        cookieStore.delete(cookieName)
-      } catch (error) {
-        // 忽略删除不存在的 cookie 的错误
-        console.log(`Cookie ${cookieName} 不存在或已删除`)
-      }
-    })
-
-    // 第四步：返回成功响应
+    // 第四步：返回成功响应并清除 cookies
     const response = NextResponse.json(
       {
         message: "登出成功",
@@ -67,7 +55,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     )
 
-    // 第五步：在响应中设置清除 cookies 的指令
+    // 在响应中设置清除 cookies 的指令
     authCookies.forEach(cookieName => {
       response.cookies.set(cookieName, "", {
         expires: new Date(0), // 设置过期时间为过去的时间
@@ -92,7 +80,7 @@ export async function POST(request: NextRequest) {
 /**
  * 处理 GET 请求 - 获取登出状态
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authConfig)
     
