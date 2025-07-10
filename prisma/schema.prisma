@@ -1,0 +1,275 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户模型
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  passwordHash  String   @map("password_hash")
+  role          Role     @default(USER)
+  avatarUrl     String?  @map("avatar_url")
+  bio           String?
+  lastLoginAt   DateTime? @map("last_login_at")
+  emailVerified Boolean  @default(false) @map("email_verified")
+  website       String?
+  socialLinks   Json?    @map("social_links")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  posts         Post[]
+  comments      Comment[]
+  media         Media[]
+  postLikes     PostLike[]
+  followers     UserFollow[] @relation("UserFollows")
+  following     UserFollow[] @relation("UserFollowing")
+  searchHistory SearchHistory[]
+  analytics     Analytics[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+// 分类模型
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // 关系
+  posts Post[]
+
+  @@map("categories")
+}
+
+// 标签模型
+model Tag {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // 关系
+  posts PostTag[]
+
+  @@map("tags")
+}
+
+// 文章模型
+model Post {
+  id              String      @id @default(cuid())
+  title           String
+  slug            String      @unique
+  content         String      @db.Text
+  excerpt         String?
+  featuredImage   String?     @map("featured_image")
+  status          PostStatus  @default(DRAFT)
+  authorId        String      @map("author_id")
+  categoryId      String      @map("category_id")
+  viewCount       Int         @default(0) @map("view_count")
+  metaKeywords    String?     @map("meta_keywords")
+  metaDescription String?     @map("meta_description")
+  readingTime     Int?        @map("reading_time")
+  isFeatured      Boolean     @default(false) @map("is_featured")
+  likeCount       Int         @default(0) @map("like_count")
+  commentCount    Int         @default(0) @map("comment_count")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+  publishedAt     DateTime?   @map("published_at")
+
+  // 关系
+  author    User       @relation(fields: [authorId], references: [id])
+  category  Category   @relation(fields: [categoryId], references: [id])
+  tags      PostTag[]
+  comments  Comment[]
+  likes     PostLike[]
+  analytics Analytics[]
+
+  @@map("posts")
+}
+
+// 文章标签关联模型
+model PostTag {
+  postId String @map("post_id")
+  tagId  String @map("tag_id")
+
+  // 关系
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@map("post_tags")
+}
+
+// 评论模型
+model Comment {
+  id        String        @id @default(cuid())
+  postId    String        @map("post_id")
+  authorId  String        @map("author_id")
+  content   String        @db.Text
+  parentId  String?       @map("parent_id")
+  status    CommentStatus @default(PENDING)
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  // 关系
+  post     Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author   User      @relation(fields: [authorId], references: [id])
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  Comment[] @relation("CommentReplies")
+
+  @@map("comments")
+}
+
+// 媒体文件模型
+model Media {
+  id         String   @id @default(cuid())
+  filename   String
+  url        String
+  mimeType   String?  @map("mime_type")
+  size       Int?
+  width      Int?
+  height     Int?
+  altText    String?  @map("alt_text")
+  uploaderId String   @map("uploader_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // 关系
+  uploader User @relation(fields: [uploaderId], references: [id])
+
+  @@map("media")
+}
+
+// 文章点赞模型
+model PostLike {
+  postId    String   @map("post_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // 关系
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId])
+  @@map("post_likes")
+}
+
+// 用户关注模型
+model UserFollow {
+  followerId  String   @map("follower_id")
+  followingId String   @map("following_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // 关系
+  follower  User @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@map("user_follows")
+}
+
+// 搜索历史模型
+model SearchHistory {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  query        String
+  resultsCount Int      @default(0) @map("results_count")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // 关系
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("search_history")
+}
+
+// 邮件队列模型
+model EmailQueue {
+  id        String      @id @default(cuid())
+  toEmail   String      @map("to_email")
+  subject   String
+  template  String?
+  data      Json?
+  status    EmailStatus @default(PENDING)
+  attempts  Int         @default(0)
+  sentAt    DateTime?   @map("sent_at")
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  @@map("email_queue")
+}
+
+// 系统设置模型
+model Setting {
+  key         String   @id
+  value       String?
+  type        String   @default("string")
+  description String?
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+// 访问统计模型
+model Analytics {
+  id        String   @id @default(cuid())
+  postId    String?  @map("post_id")
+  userId    String?  @map("user_id")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  referrer  String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // 关系
+  post Post? @relation(fields: [postId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("analytics")
+}
+
+// 通知模型
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  type      String
+  title     String?
+  content   String?
+  data      Json?
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // 关系
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// 枚举类型
+enum Role {
+  ADMIN
+  USER
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+}
