@@ -5,6 +5,17 @@ import { motion, useScroll, useTransform, useSpring } from 'framer-motion'
 import { ChevronDown, Sparkles, Code, Palette, Lightbulb } from 'lucide-react'
 import Link from 'next/link'
 import { InteractiveGridPattern } from '@/components/magicui/InteractiveGridPattern'
+import { 
+  PixelGameboy, 
+  PixelCat, 
+  PixelMushroom, 
+  PixelStar, 
+  PixelCloud, 
+  PixelHeart,
+  PixelTree,
+  PixelDiamond,
+  PixelRocket
+} from '@/components/ui/pixel-decorations'
 
 // 打字机效果组件
 const TypewriterText = React.memo(function TypewriterText({ text, delay = 0 }: { text: string; delay?: number }) {
@@ -211,6 +222,84 @@ export default function HomePage() {
             squaresClassName="stroke-border/20 dark:stroke-border/10 hover:fill-primary/5 dark:hover:fill-primary/3 transition-all duration-300"
           />
         </motion.div>
+        
+        {/* 左侧像素装饰 */}
+        <div className="absolute left-4 sm:left-8 lg:left-16 top-0 bottom-0 flex flex-col justify-around py-20 pointer-events-none">
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 0.6, x: 0 }}
+            transition={{ delay: 1, duration: 0.8 }}
+          >
+            <PixelRocket className="hidden sm:block" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 0.5, x: 0 }}
+            transition={{ delay: 1.2, duration: 0.8 }}
+          >
+            <PixelCat className="scale-75 sm:scale-100" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 0.6, x: 0 }}
+            transition={{ delay: 1.4, duration: 0.8 }}
+          >
+            <PixelMushroom className="hidden lg:block" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 0.5, x: 0 }}
+            transition={{ delay: 1.6, duration: 0.8 }}
+          >
+            <PixelStar size="md" className="scale-75 sm:scale-100" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 0.4, x: 0 }}
+            transition={{ delay: 1.8, duration: 0.8 }}
+          >
+            <PixelTree className="hidden sm:block" />
+          </motion.div>
+        </div>
+        
+        {/* 右侧像素装饰 */}
+        <div className="absolute right-4 sm:right-8 lg:right-16 top-0 bottom-0 flex flex-col justify-around py-20 pointer-events-none">
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 0.5, x: 0 }}
+            transition={{ delay: 1.1, duration: 0.8 }}
+          >
+            <PixelCloud delay={2} className="hidden sm:block" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 0.6, x: 0 }}
+            transition={{ delay: 1.3, duration: 0.8 }}
+          >
+            <PixelDiamond className="scale-75 sm:scale-100" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 0.5, x: 0 }}
+            transition={{ delay: 1.5, duration: 0.8 }}
+          >
+            <PixelGameboy className="hidden lg:block" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 0.6, x: 0 }}
+            transition={{ delay: 1.7, duration: 0.8 }}
+          >
+            <PixelHeart className="scale-75 sm:scale-100" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 0.4, x: 0 }}
+            transition={{ delay: 1.9, duration: 0.8 }}
+          >
+            <PixelStar size="lg" className="hidden sm:block" />
+          </motion.div>
+        </div>
         
         {/* 主要内容 */}
         <motion.div 

@@ -1,73 +1,73 @@
-import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Providers } from "@/components/providers";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import "./globals.css";
-import { cn } from "@/lib/utils";
+import type { Metadata, Viewport } from 'next'
+import { Geist, Geist_Mono } from 'next/font/google'
+import { Providers } from '@/components/providers'
+import Header from '@/components/layout/Header'
+import Footer from '@/components/layout/Footer'
+import './globals.css'
+import { cn } from '@/lib/utils'
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-  display: "swap",
-});
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+  display: 'swap',
+})
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: {
-    default: "思维笔记",
-    template: "%s | 思维笔记",
+    default: '思维笔记',
+    template: '%s | 思维笔记',
   },
-  description: "用心记录，让思想自由流动",
-  keywords: ["博客", "技术", "设计", "思考", "创意"],
-  authors: [{ name: "思维笔记" }],
-  creator: "思维笔记",
+  description: '用心记录，让思想自由流动',
+  keywords: ['博客', '技术', '设计', '思考', '创意'],
+  authors: [{ name: '思维笔记' }],
+  creator: '思维笔记',
   openGraph: {
-    type: "website",
-    locale: "zh_CN",
-    url: "https://flowspace.blog",
-    siteName: "思维笔记",
-    title: "思维笔记",  
-    description: "用心记录，让思想自由流动",
+    type: 'website',
+    locale: 'zh_CN',
+    url: 'https://flowspace.blog',
+    siteName: '思维笔记',
+    title: '思维笔记',
+    description: '用心记录，让思想自由流动',
   },
   twitter: {
-    card: "summary_large_image",
-    title: "思维笔记",
-    description: "用心记录，让思想自由流动",
+    card: 'summary_large_image',
+    title: '思维笔记',
+    description: '用心记录，让思想自由流动',
   },
   robots: {
     index: true,
     follow: true,
   },
-};
+}
 
 export const viewport: Viewport = {
-  width: "device-width",
+  width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#020817" },
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#020817' },
   ],
-};
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
-    <html 
-      lang="zh-CN" 
-      suppressHydrationWarning 
+    <html
+      lang="zh-CN"
+      suppressHydrationWarning
       className={cn(
-        "scroll-smooth",
-        "selection:bg-primary/20 selection:text-primary"
+        'scroll-smooth',
+        'selection:bg-primary/20 selection:text-primary'
       )}
     >
       <head>
@@ -115,14 +115,14 @@ export default function RootLayout({
         className={cn(
           geistSans.variable,
           geistMono.variable,
-          "antialiased",
-          "min-h-screen flex flex-col",
-          "bg-background text-foreground",
-          "transition-colors duration-300",
+          'antialiased',
+          'min-h-screen flex flex-col',
+          'bg-background text-foreground',
+          'transition-colors duration-300',
           // 优化字体渲染
           "font-feature-settings-['liga', 'kern']",
           // 为中文优化行高
-          "leading-relaxed"
+          'leading-relaxed'
         )}
       >
         <Providers>
@@ -130,9 +130,9 @@ export default function RootLayout({
           <div className="fixed inset-0 -z-10 overflow-hidden">
             {/* 渐变背景 */}
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-            
+
             {/* 网格背景 */}
-            <div 
+            <div
               className="absolute inset-0 opacity-[0.02] dark:opacity-[0.01]"
               style={{
                 backgroundImage: `linear-gradient(to right, currentColor 1px, transparent 1px),
@@ -140,24 +140,25 @@ export default function RootLayout({
                 backgroundSize: '50px 50px',
               }}
             />
-            
+
             {/* 动态光晕效果 */}
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-subtle" />
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse-subtle" style={{ animationDelay: '2s' }} />
+            <div
+              className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse-subtle"
+              style={{ animationDelay: '2s' }}
+            />
           </div>
 
           {/* 主要布局结构 */}
           <div className="relative flex flex-col min-h-screen">
             <Header />
-            
+
             {/* 主内容区域 */}
             <main className="flex-1 relative">
               {/* 内容包装器 - 提供呼吸感 */}
-              <div className="animate-fade-in">
-                {children}
-              </div>
+              <div className="animate-fade-in">{children}</div>
             </main>
-            
+
             <Footer />
           </div>
 
@@ -165,12 +166,12 @@ export default function RootLayout({
           <div className="pointer-events-none fixed inset-0 z-50">
             {/* 顶部渐变遮罩 */}
             <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background via-background/50 to-transparent" />
-            
+
             {/* 底部渐变遮罩 */}
             <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/50 to-transparent" />
           </div>
         </Providers>
       </body>
     </html>
-  );
+  )
 }
