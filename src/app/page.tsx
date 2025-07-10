@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion'
 import { ChevronDown, Sparkles, Code, Palette, Lightbulb } from 'lucide-react'
 import Link from 'next/link'
+import { InteractiveGridPattern } from '@/components/magicui/InteractiveGridPattern'
 
 // 打字机效果组件
 const TypewriterText = React.memo(function TypewriterText({ text, delay = 0 }: { text: string; delay?: number }) {
@@ -130,6 +131,9 @@ export default function HomePage() {
   const mouseX = useSpring(0, springConfig)
   const mouseY = useSpring(0, springConfig)
 
+  // 响应式网格方块数量
+  const [gridSquares, setGridSquares] = useState<[number, number]>([20, 15])
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       const { clientX, clientY } = e
@@ -139,8 +143,20 @@ export default function HomePage() {
       mouseY.set((clientY - innerHeight / 2) / 50)
     }
 
+    const updateGridSquares = () => {
+      const width = window.innerWidth
+      const height = window.innerHeight
+      setGridSquares([Math.floor(width / 60), Math.floor(height / 60)])
+    }
+
+    updateGridSquares()
+    window.addEventListener('resize', updateGridSquares)
     window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
+    
+    return () => {
+      window.removeEventListener('resize', updateGridSquares)
+      window.removeEventListener('mousemove', handleMouseMove)
+    }
   }, [mouseX, mouseY])
 
   // 模拟文章数据
@@ -169,7 +185,7 @@ export default function HomePage() {
   ]
 
   return (
-    <div className="relative">
+    <div className="relative ">
       {/* Hero Section - 全屏欢迎区域 */}
       <section 
         ref={heroRef}
@@ -182,16 +198,19 @@ export default function HomePage() {
           className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10"
         />
         
-        {/* 网格背景 */}
-         <motion.div 
-           style={{ 
-             y: y2,
-             backgroundImage: `linear-gradient(to right, currentColor 1px, transparent 1px),
-                              linear-gradient(to bottom, currentColor 1px, transparent 1px)`,
-             backgroundSize: '60px 60px',
-           }}
-           className="absolute inset-0 opacity-[0.02] dark:opacity-[0.01]"
-         />
+        {/* 交互式网格背景 */}
+        <motion.div 
+          style={{ y: y2 }}
+          className="absolute inset-0"
+        >
+          <InteractiveGridPattern
+            width={60}
+            height={60}
+            squares={gridSquares}
+            className="w-full h-full border-0"
+            squaresClassName="stroke-border/20 dark:stroke-border/10 hover:fill-primary/5 dark:hover:fill-primary/3 transition-all duration-300"
+          />
+        </motion.div>
         
         {/* 主要内容 */}
         <motion.div 
@@ -307,7 +326,7 @@ export default function HomePage() {
       </section>
       
       {/* Featured Articles Section - 特色文章 */}
-      <section className="relative py-16 sm:py-20 lg:py-24 px-4 sm:px-6">
+      <section className="relative sm:py-20 lg:py-24 sm:px-6">
         <div className="max-w-6xl mx-auto">
           {/* 区域标题 */}
           <motion.div
