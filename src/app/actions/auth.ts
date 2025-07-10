@@ -1,7 +1,6 @@
 "use server"
 
 import { redirect } from "next/navigation"
-import { cookies } from "next/headers"
 
 /**
  * 服务器端登出 Action
@@ -17,56 +16,21 @@ import { cookies } from "next/headers"
  * - 适合在服务器组件中使用
  */
 export async function signOutAction() {
+  /**
+   * 服务器端登出 Action
+   * 
+   * 在服务器端，我们需要手动清除 NextAuth 的 cookies
+   * 然后重定向用户到首页
+   */
   try {
-    /**
-     * 方法1：调用我们自定义的登出 API
-     * 
-     * 使用我们创建的 /api/auth/signout 接口
-     * 这个接口会正确处理 cookies 清除
-     */
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+    console.log("执行服务器端登出")
     
-    const response = await fetch(`${baseUrl}/api/auth/signout`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        // 传递当前的 cookies 给 API
-        "Cookie": cookies().toString()
-      },
-    })
-
-    if (!response.ok) {
-      console.error("自定义登出 API 调用失败")
-      throw new Error("登出失败")
-    }
-
-    const result = await response.json()
-    console.log("服务器端登出成功:", result.message)
-
+    // 注意：在服务器端的 Server Action 中，我们不能直接设置 cookies
+    // 这是因为 cookies() 返回的是只读的 ReadonlyRequestCookies
+    // 正确的做法是让客户端来处理登出，或者使用 NextAuth 的标准流程
+    
   } catch (error) {
-    /**
-     * 错误处理：回退到 NextAuth 默认登出
-     * 
-     * 如果自定义 API 失败，使用 NextAuth 的默认登出接口
-     */
     console.error("服务器端登出错误:", error)
-    
-    try {
-      const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
-      
-      await fetch(`${baseUrl}/api/auth/signout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          csrfToken: "", // NextAuth 会在服务器端处理
-        }),
-      })
-    } catch (fallbackError) {
-      console.error("NextAuth 登出也失败:", fallbackError)
-      // 即使失败也要继续重定向，确保用户体验
-    }
   }
 
   /**
@@ -86,21 +50,20 @@ export async function signOutAction() {
  * @param redirectTo 登出后重定向的路径
  */
 export async function signOutWithRedirect(redirectTo: string = "/") {
+  /**
+   * 带自定义重定向的登出 Action
+   * 
+   * 允许指定登出后的重定向地址
+   * 
+   * @param redirectTo 登出后重定向的路径
+   */
   try {
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+    console.log("执行带自定义重定向的服务器端登出")
     
-    const response = await fetch(`${baseUrl}/api/auth/signout`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Cookie": cookies().toString()
-      },
-    })
-
-    if (response.ok) {
-      const result = await response.json()
-      console.log("登出成功:", result.message)
-    }
+    // 注意：在服务器端的 Server Action 中，我们不能直接设置 cookies
+    // 这是因为 cookies() 返回的是只读的 ReadonlyRequestCookies
+    // 正确的做法是让客户端来处理登出，或者使用 NextAuth 的标准流程
+    
   } catch (error) {
     console.error("登出错误:", error)
   }
@@ -148,4 +111,10 @@ export async function signOutWithRedirect(redirectTo: string = "/") {
  *   await signOutWithRedirect('/login')
  * }
  * ```
+ * 
+ * 注意：
+ * - 这些 Server Actions 主要用于简单的重定向场景
+ * - 实际的登出逻辑应该由客户端的 `signOut` 函数处理
+ * - 或者使用 `/api/auth/signout` API 端点
+ * - 这些 Actions 适合在无 JavaScript 环境中使用
  */

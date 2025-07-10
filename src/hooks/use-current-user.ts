@@ -173,7 +173,7 @@ export function useIsAdmin() {
   
   // 检查用户是否存在且角色为管理员
   // 使用可选链操作符 (?.) 防止用户对象为 null/undefined 时报错
-  return user?.role === "admin"
+  return user?.role === "ADMIN"
 }
 
 /**

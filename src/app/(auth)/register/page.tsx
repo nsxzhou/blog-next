@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,9 +16,7 @@ const registerSchema = z
     name: z.string().min(2, "姓名至少2个字符").max(50, "姓名不能超过50个字符"),
     email: z.string().email("请输入有效的邮箱地址").max(100, "邮箱地址过长"),
     password: z.string()
-      .min(8, "密码至少8个字符")
-      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, 
-             "密码必须包含大小写字母、数字和特殊字符"),
+      .min(6, "密码至少6个字符"),
     confirmPassword: z.string(),
     agreeTerms: z.boolean().refine(val => val === true, "请同意服务条款和隐私政策"),
   })
@@ -42,17 +40,22 @@ export default function RegisterPage() {
     register,
     handleSubmit,
     watch,
+    trigger,
     formState: { errors },
+    getValues,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    mode: "onChange", // 实时验证
+    reValidateMode: "onChange", // 重新验证模式
   });
 
   const password = watch("password", "");
+  const confirmPassword = watch("confirmPassword", "");
 
   // 密码强度检查
   const checkPasswordStrength = (password: string) => {
     let strength = 0;
-    if (password.length >= 8) strength++;
+    if (password.length >= 6) strength++;
     if (/[a-z]/.test(password)) strength++;
     if (/[A-Z]/.test(password)) strength++;
     if (/\d/.test(password)) strength++;
@@ -60,9 +63,16 @@ export default function RegisterPage() {
     return strength;
   };
 
-  useState(() => {
+  useEffect(() => {
     setPasswordStrength(checkPasswordStrength(password));
-  });
+  }, [password]);
+
+  // 当密码变化时，重新验证确认密码字段
+  useEffect(() => {
+    if (confirmPassword && confirmPassword.length > 0) {
+      trigger("confirmPassword");
+    }
+  }, [password, trigger]);
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
@@ -84,10 +94,10 @@ export default function RegisterPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        if (result.errors) {
-          setError(result.errors[0]?.message || "输入数据无效");
+        if (result.details) {
+          setError(result.details[0] || "输入数据无效");
         } else {
-          setError(result.message || "注册失败");
+          setError(result.error || result.message || "注册失败");
         }
         return;
       }
@@ -164,6 +174,7 @@ export default function RegisterPage() {
             <input
               {...register("name")}
               type="text"
+              id="name"
               autoComplete="name"
               placeholder="张三"
               onFocus={() => setFocusedField('name')}
@@ -206,6 +217,7 @@ export default function RegisterPage() {
             <input
               {...register("email")}
               type="email"
+              id="email"
               autoComplete="email"
               placeholder="you@example.com"
               onFocus={() => setFocusedField('email')}
@@ -248,11 +260,11 @@ export default function RegisterPage() {
             <input
               {...register("password")}
               type={showPassword ? "text" : "password"}
+              id="password"
               autoComplete="new-password"
               placeholder="••••••••"
               onFocus={() => setFocusedField('password')}
               onBlur={() => setFocusedField(null)}
-              onChange={(e) => setPasswordStrength(checkPasswordStrength(e.target.value))}
               className={cn(
                 "w-full pl-10 pr-10 py-3 bg-background",
                 "border rounded-lg transition-all duration-200",
@@ -270,7 +282,7 @@ export default function RegisterPage() {
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
-          
+
           {/* 密码强度指示器 */}
           {password && (
             <motion.div
@@ -291,11 +303,11 @@ export default function RegisterPage() {
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
-                需包含大小写字母、数字和特殊字符
+                建议包含大小写字母、数字和特殊字符
               </p>
             </motion.div>
           )}
-          
+
           {errors.password && (
             <motion.p
               initial={{ opacity: 0 }}
@@ -324,6 +336,7 @@ export default function RegisterPage() {
             <input
               {...register("confirmPassword")}
               type={showConfirmPassword ? "text" : "password"}
+              id="confirmPassword"
               autoComplete="new-password"
               placeholder="••••••••"
               onFocus={() => setFocusedField('confirmPassword')}

@@ -4,7 +4,9 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { signOut } from 'next-auth/react'
-import { User, Settings, LogOut, FileText } from 'lucide-react'
+import { User, Settings, LogOut, FileText, ChevronDown } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { cn } from '@/lib/utils'
 
 interface UserMenuProps {
   user: {
@@ -62,11 +64,37 @@ export default function UserMenu({ user }: UserMenuProps) {
     }
   }
 
+  const menuItems = [
+    {
+      href: '/dashboard',
+      icon: User,
+      label: '仪表板',
+    },
+    {
+      href: '/posts',
+      icon: FileText,
+      label: '我的文章',
+    },
+    {
+      href: '/settings',
+      icon: Settings,
+      label: '设置',
+    },
+  ]
+
   return (
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        className={cn(
+          "flex items-center gap-2 p-2 rounded-lg",
+          "transition-all duration-200",
+          "hover:bg-accent",
+          "focus:outline-none focus:ring-2 focus:ring-primary/20",
+          "group"
+        )}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
       >
         {user.image ? (
           <Image
@@ -74,66 +102,111 @@ export default function UserMenu({ user }: UserMenuProps) {
             alt={user.name || '用户'}
             width={32}
             height={32}
-            className="rounded-full"
+            className="rounded-full ring-2 ring-background"
           />
         ) : (
-          <div className="h-8 w-8 rounded-full bg-primary-600 flex items-center justify-center">
-            <span className="text-white font-medium">
-              {user.name?.[0] || user.email?.[0] || 'U'}
-            </span>
+          <div className={cn(
+            "h-8 w-8 rounded-full",
+            "bg-primary text-primary-foreground",
+            "flex items-center justify-center",
+            "font-medium text-sm",
+            "ring-2 ring-background"
+          )}>
+            {user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}
           </div>
         )}
+
+        {/* 用户名（可选显示） */}
+        <span className="hidden md:block text-sm font-medium text-foreground max-w-[100px] truncate">
+          {user.name || user.email?.split('@')[0]}
+        </span>
+
+        {/* 下拉箭头 */}
+        <ChevronDown className={cn(
+          "h-4 w-4 text-muted-foreground",
+          "transition-transform duration-200",
+          isOpen && "rotate-180"
+        )} />
       </button>
 
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1">
-          <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-            <p className="text-sm font-medium text-gray-900 dark:text-white">
-              {user.name || '用户'}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-              {user.email}
-            </p>
-          </div>
-
-          <Link
-            href="/dashboard"
-            className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-            onClick={() => setIsOpen(false)}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className={cn(
+              "absolute right-0 mt-2 w-64",
+              "bg-popover text-popover-foreground",
+              "rounded-lg shadow-lg",
+              "border border-border",
+              "overflow-hidden",
+              "z-50"
+            )}
           >
-            <User className="mr-2 h-4 w-4" />
-            仪表板
-          </Link>
+            {/* 用户信息头部 */}
+            <div className={cn(
+              "px-4 py-3",
+              "bg-muted/50",
+              "border-b border-border"
+            )}>
+              <p className="text-sm font-medium text-foreground truncate">
+                {user.name || '用户'}
+              </p>
+              <p className="text-xs text-muted-foreground truncate mt-0.5">
+                {user.email}
+              </p>
+            </div>
 
-          <Link
-            href="/posts"
-            className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-            onClick={() => setIsOpen(false)}
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            我的文章
-          </Link>
+            {/* 菜单项 */}
+            <div className="py-1">
+              {menuItems.map((item) => {
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-2.5",
+                      "text-sm text-foreground",
+                      "hover:bg-accent hover:text-accent-foreground",
+                      "transition-all duration-150",
+                      "focus:outline-none focus:bg-accent",
+                      "group"
+                    )}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <Icon className="h-4 w-4 text-muted-foreground transition-all duration-150 group-hover:text-accent-foreground group-hover:scale-110" />
+                    <span>{item.label}</span>
+                  </Link>
+                )
+              })}
+            </div>
 
-          <Link
-            href="/settings"
-            className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-            onClick={() => setIsOpen(false)}
-          >
-            <Settings className="mr-2 h-4 w-4" />
-            设置
-          </Link>
+            {/* 分隔线 */}
+            <div className="h-px bg-border my-1" />
 
-          <hr className="my-1 border-gray-200 dark:border-gray-700" />
-
-          <button
-            onClick={handleSignOut}
-            className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            退出登录
-          </button>
-        </div>
-      )}
+            {/* 退出登录按钮 */}
+            <div className="py-1">
+              <button
+                onClick={handleSignOut}
+                className={cn(
+                  "flex items-center gap-3 w-full px-4 py-2.5",
+                  "text-sm text-destructive",
+                  "hover:bg-destructive/10 hover:text-destructive",
+                  "transition-all duration-150",
+                  "focus:outline-none focus:bg-destructive/10",
+                  "group"
+                )}
+              >
+                <LogOut className="h-4 w-4 transition-transform duration-150 group-hover:scale-110" />
+                <span className="transition-all duration-150 group-hover:scale-110">退出登录</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

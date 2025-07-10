@@ -11,7 +11,8 @@
  * - 验证资源访问权限
  */
 
-import { auth } from "@/lib/auth"
+import { getServerSession } from "next-auth/next"
+import { authConfig } from "@/lib/auth"
 import { redirect } from "next/navigation"
 
 /**
@@ -46,8 +47,8 @@ import { redirect } from "next/navigation"
  * ```
  */
 export async function getCurrentUser() {
-  // 调用 NextAuth 的 auth 函数获取会话信息
-  const session = await auth()
+  // 调用 NextAuth 的 getServerSession 函数获取会话信息
+  const session = await getServerSession(authConfig)
   
   // 返回会话中的用户信息，如果没有会话则返回 undefined
   return session?.user

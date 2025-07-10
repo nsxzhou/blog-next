@@ -1,234 +1,165 @@
 /**
  * 用户登出 API 路由
  * 
- * 这个文件就像银行的"销户窗口"，负责处理用户的登出请求
- * 
- * 主要功能：
+ * 这个 API 端点处理用户登出逻辑：
  * - 清除用户会话
- * - 清除相关 cookies
+ * - 清除认证 cookies
  * - 返回登出结果
- * - 提供安全的登出流程
  * 
- * 安全措施：
- * - 验证 CSRF token
- * - 清除所有会话数据
- * - 安全的重定向处理
+ * 注意：这是一个补充的登出端点，与 NextAuth 的默认 /api/auth/signout 配合使用
+ * 主要用于需要额外登出处理逻辑的场景
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { getToken } from "next-auth/jwt"
+import { getServerSession } from "next-auth/next"
+import { authConfig } from "@/lib/auth"
 import { cookies } from "next/headers"
 
 /**
- * 处理用户登出的 POST 请求
- * 
- * 这个函数就像银行的"销户业务员"，按照标准流程处理每一个登出申请
- * 
- * 处理流程：
- * 1. 验证用户登录状态
- * 2. 清除会话 token
- * 3. 清除相关 cookies
- * 4. 返回成功响应
- * 
- * @param request Next.js 请求对象
- * @returns Promise<NextResponse> 登出结果响应
+ * 处理 POST 请求 - 用户登出
  */
 export async function POST(request: NextRequest) {
   try {
-    /**
-     * 第一步：验证用户登录状态
-     * 
-     * 检查用户是否已登录，如果未登录则直接返回成功
-     * 这样可以避免重复登出的错误
-     */
-    const token = await getToken({ 
-      req: request, 
-      secret: process.env.NEXTAUTH_SECRET 
-    })
-
-    // 如果用户未登录，直接返回成功响应
-    if (!token) {
-      return NextResponse.json({
-        message: "用户未登录或已登出",
-        success: true
-      })
+    // 第一步：获取当前用户会话
+    const session = await getServerSession(authConfig)
+    
+    if (!session?.user) {
+      console.log("登出请求：用户未登录")
+      return NextResponse.json(
+        { error: "用户未登录" },
+        { status: 401 }
+      )
     }
 
-    /**
-     * 第二步：清除会话相关的 cookies
-     * 
-     * NextAuth 使用多个 cookies 来管理会话状态
-     * 我们需要清除所有相关的 cookies
-     */
+    console.log("用户登出:", session.user.email)
+
+    // 第二步：执行自定义登出逻辑（如果需要）
+    // 例如：记录登出日志、清理用户相关缓存等
+    // await logUserActivity(session.user.id, 'LOGOUT')
+    // await clearUserCache(session.user.id)
+
+    // 第三步：清除认证相关的 cookies
     const cookieStore = cookies()
     
-    // NextAuth 相关的 cookie 名称
-    const cookiesToClear = [
+    // 清除 NextAuth 相关的 cookies
+    const authCookies = [
       'next-auth.session-token',
       'next-auth.csrf-token',
       'next-auth.callback-url',
-      'next-auth.state',
       '__Secure-next-auth.session-token', // HTTPS 环境下的安全 cookie
-      '__Host-next-auth.csrf-token' // HTTPS 环境下的安全 cookie
     ]
 
-    // 创建响应对象
-    const response = NextResponse.json({
-      message: "登出成功",
-      success: true,
-      timestamp: new Date().toISOString()
+    authCookies.forEach(cookieName => {
+      try {
+        cookieStore.delete(cookieName)
+      } catch (error) {
+        // 忽略删除不存在的 cookie 的错误
+        console.log(`Cookie ${cookieName} 不存在或已删除`)
+      }
     })
 
-    // 清除所有相关 cookies
-    cookiesToClear.forEach(cookieName => {
-      response.cookies.set(cookieName, '', {
-        expires: new Date(0), // 设置过期时间为过去的时间
-        path: '/',
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax'
-      })
-    })
-
-    /**
-     * 第三步：记录登出日志（可选）
-     * 
-     * 在生产环境中，记录用户登出行为有助于安全审计
-     */
-    console.log(`用户登出: ${token.email} at ${new Date().toISOString()}`)
-
-    /**
-     * 第四步：返回成功响应
-     * 
-     * 返回登出成功的信息
-     * 前端可以根据这个响应进行相应的处理
-     */
-    return response
-
-  } catch (error) {
-    /**
-     * 错误处理
-     * 
-     * 处理在登出过程中可能出现的各种错误
-     * 即使出现错误，也应该尽量清除用户会话
-     */
-    console.error("登出错误:", {
-      message: error instanceof Error ? error.message : "未知错误",
-      type: error?.constructor?.name,
-    })
-
-    // 即使出现错误，也要尝试清除 cookies
+    // 第四步：返回成功响应
     const response = NextResponse.json(
-      { 
-        message: "登出过程中出现错误，但会话已清除",
-        success: true // 仍然返回成功，因为安全起见
+      {
+        message: "登出成功",
+        redirectTo: "/", // 建议的重定向地址
       },
-      { status: 200 } // 使用 200 而不是错误状态码
+      { status: 200 }
     )
 
-    // 清除 cookies（安全措施）
-    const cookiesToClear = [
-      'next-auth.session-token',
-      'next-auth.csrf-token',
-      'next-auth.callback-url',
-      'next-auth.state',
-      '__Secure-next-auth.session-token',
-      '__Host-next-auth.csrf-token'
-    ]
-
-    cookiesToClear.forEach(cookieName => {
-      response.cookies.set(cookieName, '', {
-        expires: new Date(0),
-        path: '/',
+    // 第五步：在响应中设置清除 cookies 的指令
+    authCookies.forEach(cookieName => {
+      response.cookies.set(cookieName, "", {
+        expires: new Date(0), // 设置过期时间为过去的时间
+        path: "/",
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax'
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
       })
     })
 
     return response
-  }
-}
 
-/**
- * 处理用户登出的 GET 请求
- * 
- * 提供一个简单的 GET 接口用于检查登出状态
- * 主要用于调试和状态检查
- * 
- * @param request Next.js 请求对象
- * @returns Promise<NextResponse> 当前登录状态
- */
-export async function GET(request: NextRequest) {
-  try {
-    const token = await getToken({ 
-      req: request, 
-      secret: process.env.NEXTAUTH_SECRET 
-    })
-
-    return NextResponse.json({
-      isLoggedIn: !!token,
-      user: token ? {
-        id: token.sub,
-        email: token.email,
-        name: token.name,
-        role: token.role
-      } : null,
-      timestamp: new Date().toISOString()
-    })
   } catch (error) {
+    console.error("登出过程中发生错误:", error)
     return NextResponse.json(
-      { 
-        message: "检查登录状态失败",
-        error: error instanceof Error ? error.message : "未知错误"
-      },
+      { error: "登出失败，请稍后重试" },
       { status: 500 }
     )
   }
 }
 
 /**
- * 使用示例
+ * 处理 GET 请求 - 获取登出状态
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authConfig)
+    
+    return NextResponse.json({
+      isLoggedIn: !!session?.user,
+      user: session?.user ? {
+        id: session.user.id,
+        email: session.user.email,
+        name: session.user.name,
+      } : null,
+    })
+
+  } catch (error) {
+    console.error("获取登出状态时发生错误:", error)
+    return NextResponse.json(
+      { error: "服务器内部错误" },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * API 使用示例
  * 
- * 1. 客户端登出请求：
+ * 1. 执行登出：
  * ```javascript
  * const response = await fetch('/api/auth/signout', {
  *   method: 'POST',
  *   headers: {
- *     'Content-Type': 'application/json'
+ *     'Content-Type': 'application/json',
  *   }
  * })
  * 
  * const result = await response.json()
- * if (result.success) {
- *   // 登出成功，重定向到首页
- *   window.location.href = '/'
+ * if (response.ok) {
+ *   console.log('登出成功:', result.message)
+ *   // 重定向到首页
+ *   window.location.href = result.redirectTo || '/'
+ * } else {
+ *   console.error('登出失败:', result.error)
  * }
  * ```
  * 
  * 2. 检查登录状态：
  * ```javascript
  * const response = await fetch('/api/auth/signout')
- * const status = await response.json()
- * console.log('当前登录状态:', status.isLoggedIn)
+ * const result = await response.json()
+ * console.log('是否已登录:', result.isLoggedIn)
+ * console.log('当前用户:', result.user)
  * ```
- */
-
-/**
- * 安全注意事项
  * 
- * 1. Cookie 清除：
- *    - 确保清除所有相关的 cookies
- *    - 使用正确的 cookie 属性（httpOnly, secure, sameSite）
- *    - 设置过期时间为过去的时间
+ * 3. 结合 NextAuth 客户端函数：
+ * ```javascript
+ * import { signOut } from 'next-auth/react'
  * 
- * 2. 错误处理：
- *    - 即使出现错误也要清除会话
- *    - 不暴露敏感的错误信息
- *    - 记录详细的错误日志用于调试
+ * const handleSignOut = async () => {
+ *   // 先调用自定义登出 API（执行额外的登出逻辑）
+ *   await fetch('/api/auth/signout', { method: 'POST' })
+ *   
+ *   // 然后调用 NextAuth 的登出函数
+ *   await signOut({ callbackUrl: '/' })
+ * }
+ * ```
  * 
- * 3. 日志记录：
- *    - 记录用户登出行为
- *    - 包含时间戳和用户标识
- *    - 不记录敏感信息
+ * 注意事项：
+ * 1. 这个 API 路径与 NextAuth 的默认路径不冲突
+ * 2. NextAuth 的登出端点是 /api/auth/signout（由 [...nextauth] 处理）
+ * 3. 这个自定义端点主要用于额外的登出处理逻辑
+ * 4. 建议同时使用两个端点以确保完全清除会话
  */

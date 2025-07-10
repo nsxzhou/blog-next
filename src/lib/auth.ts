@@ -255,41 +255,9 @@ export const authConfig = {
 /**
  * 导出 NextAuth 实例和相关函数
  * 
- * NextAuth 函数会根据配置返回以下对象：
- * - handlers: API 路由处理器（GET、POST）
- * - auth: 服务端获取会话的函数
- * - signIn: 登录函数
- * - signOut: 登出函数
+ * NextAuth v4 配置正确的导出方式
  */
-/**
- * 创建 NextAuth 实例
- * 
- * NextAuth v4 返回一个函数，可以直接用作 API 路由处理器
- */
-const handler = NextAuth(authConfig)
-
-// NextAuth v4 的导出方式
-export default handler
-
-// 为了兼容我们的代码，创建 handlers 对象
-// 将 handler 作为具名导出，以便在 route.ts 中使用
-export { handler }
-
-// 创建符合 App Router 约定的 handlers 对象
-export const handlers = {
-  GET: handler,
-  POST: handler
-}
-
-// NextAuth v4 中，服务端获取会话的函数
-export async function auth(req?: any, res?: any) {
-  // 在服务端使用 getServerSession
-  const { getServerSession } = await import("next-auth/next")
-  return getServerSession(req, res, authConfig)
-}
-
-// 注意：signIn 和 signOut 在 NextAuth v4 中是客户端函数
-// 应该从 next-auth/react 导入使用
+export default NextAuth(authConfig)
 
 /**
  * 使用示例：
@@ -305,7 +273,7 @@ export async function auth(req?: any, res?: any) {
  *   // 处理已登录用户的请求
  * }
  * 
- * // 在页面中使用
+ * // 在客户端组件中使用
  * import { signIn, signOut } from '@/lib/auth'
  * 
  * // 登录
