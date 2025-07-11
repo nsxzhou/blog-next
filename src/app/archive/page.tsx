@@ -6,17 +6,14 @@ import { Search, Calendar, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
-// TODO: 替换为实际的文章数据获取函数
-// import { getPostList } from '@/lib/posts'
-// import type { Post } from '@/types/post'
-
-// 临时的 Post 类型定义
+// Post 类型定义
 type Post = {
+  id: string
   slug: string
   title: string
   date: string
-  tags?: string[]
-  excerpt?: string
+  tags: string[]
+  excerpt: string
 }
 
 // 按年份分组文章
@@ -48,60 +45,27 @@ export default function ArchivePage() {
   useEffect(() => {
     async function loadPosts() {
       try {
-        // TODO: 替换为实际的数据获取逻辑
-        // const postList = await getPostList()
-        
-        // 模拟数据，用于展示
-        const mockPosts: Post[] = [
-          {
-            slug: 'getting-started-with-nextjs',
-            title: 'Next.js 15 入门指南',
-            date: '2024-12-15',
-            tags: ['Next.js', 'React', 'Web开发']
-          },
-          {
-            slug: 'understanding-react-server-components',
-            title: '深入理解 React Server Components',
-            date: '2024-12-10',
-            tags: ['React', 'RSC', '性能优化']
-          },
-          {
-            slug: 'typescript-best-practices',
-            title: 'TypeScript 最佳实践',
-            date: '2024-11-28',
-            tags: ['TypeScript', '类型系统', '代码质量']
-          },
-          {
-            slug: 'building-scalable-apis',
-            title: '构建可扩展的 API 架构',
-            date: '2024-11-15',
-            tags: ['API', '架构设计', '后端']
-          },
-          {
-            slug: 'modern-css-techniques',
-            title: '现代 CSS 技术探索',
-            date: '2024-10-20',
-            tags: ['CSS', 'Tailwind', '响应式设计']
-          },
-          {
-            slug: 'web-performance-optimization',
-            title: 'Web 性能优化实战',
-            date: '2023-12-25',
-            tags: ['性能', '优化', 'Web']
-          },
-          {
-            slug: 'introduction-to-ai',
-            title: 'AI 时代的编程思考',
-            date: '2023-11-30',
-            tags: ['AI', '编程', '未来']
-          }
-        ]
-        
-        setPosts(mockPosts)
-        
-        // 默认展开所有年份
-        const years = new Set(mockPosts.map(post => new Date(post.date).getFullYear()))
-        setExpandedYears(years)
+        // 获取所有已发布的文章
+        const response = await fetch('/api/posts?status=PUBLISHED&orderBy=publishedAt&order=desc&limit=1000')
+        if (response.ok) {
+          const data = await response.json()
+          
+          // 转换数据格式
+          const formattedPosts: Post[] = data.posts.map((post: any) => ({
+            id: post.id,
+            slug: post.slug,
+            title: post.title,
+            date: post.publishedAt,
+            tags: post.tags.map((tag: any) => tag.name),
+            excerpt: post.excerpt || ''
+          }))
+          
+          setPosts(formattedPosts)
+          
+          // 默认展开所有年份
+          const years = new Set(formattedPosts.map(post => new Date(post.date).getFullYear()))
+          setExpandedYears(years)
+        }
       } catch (error) {
         console.error('Failed to load posts:', error)
       } finally {
@@ -243,7 +207,7 @@ export default function ArchivePage() {
                         <div className="space-y-1 pl-8">
                           {posts.map((post, index) => (
                             <motion.div
-                              key={post.slug}
+                              key={post.id}
                               initial={{ opacity: 0, x: -20 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: index * 0.02 }}

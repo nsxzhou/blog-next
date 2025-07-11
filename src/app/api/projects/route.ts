@@ -10,6 +10,7 @@ import {
   projectStatusSchema,
   validateRequest 
 } from '@/lib/validations'
+import { USER_ROLES } from '@/lib/constants'
 
 // GET请求参数验证
 const getProjectsSchema = paginationSchema.extend({
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 只有管理员可以创建项目
-    if (session.user.role !== 'ADMIN') {
+    if (session.user.role !== USER_ROLES.ADMIN) {
       return NextResponse.json({ error: '没有权限' }, { status: 403 })
     }
     

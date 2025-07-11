@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { updateTag, deleteTag } from '@/lib/tags'
 import { z } from 'zod'
+import { USER_ROLES } from '@/lib/constants'
 
 // 更新标签的验证schema
 const updateTagSchema = z.object({
@@ -57,7 +58,7 @@ export async function PUT(
     }
     
     // 只有管理员可以更新标签
-    if (session.user.role !== 'ADMIN') {
+    if (session.user.role !== USER_ROLES.ADMIN) {
       return NextResponse.json({ error: '没有权限' }, { status: 403 })
     }
     
@@ -114,7 +115,7 @@ export async function DELETE(
     }
     
     // 只有管理员可以删除标签
-    if (session.user.role !== 'ADMIN') {
+    if (session.user.role !== USER_ROLES.ADMIN) {
       return NextResponse.json({ error: '没有权限' }, { status: 403 })
     }
     

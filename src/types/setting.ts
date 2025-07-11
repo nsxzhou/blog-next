@@ -80,7 +80,6 @@ export const SETTING_KEYS = {
   POSTS_PER_PAGE: 'posts_per_page',
   
   // 高级设置
-  ENABLE_COMMENTS: 'enable_comments',
   ENABLE_REGISTRATION: 'enable_registration',
   MAINTENANCE_MODE: 'maintenance_mode',
 } as const

@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { getAllTags, createTag, findOrCreateTags } from '@/lib/tags'
 import { z } from 'zod'
 import { tagSchema, validateRequest } from '@/lib/validations'
+import { USER_ROLES } from '@/lib/constants'
 
 // 批量创建标签的验证schema
 const batchCreateTagsSchema = z.object({
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 只有管理员可以创建标签
-    if (session.user.role !== 'ADMIN') {
+    if (session.user.role !== USER_ROLES.ADMIN) {
       return NextResponse.json({ error: '没有权限' }, { status: 403 })
     }
     

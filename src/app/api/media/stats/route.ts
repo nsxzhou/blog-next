@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getMediaStats } from '@/lib/media'
+import { USER_ROLES } from '@/lib/constants'
 
 // GET /api/media/stats - 获取媒体统计
 export async function GET() {
@@ -13,7 +14,7 @@ export async function GET() {
     }
     
     // 管理员查看所有统计，普通用户只看自己的
-    const userId = session.user.role === 'ADMIN' ? undefined : session.user.id
+    const userId = session.user.role === USER_ROLES.ADMIN ? undefined : session.user.id
     
     const stats = await getMediaStats(userId)
     

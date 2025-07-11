@@ -29,6 +29,7 @@ model User {
   postLikes     PostLike[]
   analytics     Analytics[]
   notifications Notification[]
+  friendLinks   FriendLink[]
 
   @@map("users")
 }
@@ -209,6 +210,26 @@ model Notification {
   @@map("notifications")
 }
 
+// 友情链接模型
+model FriendLink {
+  id          String           @id @default(cuid())
+  name        String
+  url         String
+  description String?
+  avatar      String?
+  email       String?
+  status      FriendLinkStatus @default(PENDING)
+  addedBy     String?          @map("added_by")
+  lastCheck   DateTime?        @map("last_check")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  // 关系
+  addedByUser User? @relation(fields: [addedBy], references: [id])
+
+  @@map("friend_links")
+}
+
 // 枚举类型
 enum Role {
   ADMIN
@@ -232,7 +253,6 @@ enum NotificationType {
   POST_LIKE   // 文章被点赞
   NEW_POST    // 新文章发布
   MAINTENANCE // 维护通知
-  LIKE        // 点赞通知（兼容旧代码）
 }
 
 enum MediaType {
@@ -240,4 +260,10 @@ enum MediaType {
   VIDEO
   DOCUMENT
   OTHER
+}
+
+enum FriendLinkStatus {
+  ACTIVE   // 正常
+  PENDING  // 待审核
+  BROKEN   // 失效
 }

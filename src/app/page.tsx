@@ -62,6 +62,7 @@ const FeaturedArticleCard = React.memo(function FeaturedArticleCard({
   date, 
   readTime, 
   tags,
+  slug,
   index 
 }: {
   title: string
@@ -69,6 +70,7 @@ const FeaturedArticleCard = React.memo(function FeaturedArticleCard({
   date: string
   readTime: string
   tags: string[]
+  slug: string
   index: number
 }) {
   return (
@@ -79,7 +81,7 @@ const FeaturedArticleCard = React.memo(function FeaturedArticleCard({
       viewport={{ once: true, margin: '-100px' }}
       className="group relative"
     >
-      <Link href={`/articles/${title.toLowerCase().replace(/\s+/g, '-')}`}>
+      <Link href={`/articles/${slug}`}>
         <div className="relative p-4 sm:p-6 lg:p-8 rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-500 hover:border-border hover:bg-card/80 hover:shadow-lg hover:-translate-y-1">
           {/* 悬浮光效 */}
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -144,6 +146,39 @@ export default function HomePage() {
 
   // 响应式网格方块数量
   const [gridSquares, setGridSquares] = useState<[number, number]>([20, 15])
+  
+  // 特色文章状态
+  const [featuredArticles, setFeaturedArticles] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // 获取特色文章
+  useEffect(() => {
+    const fetchFeaturedArticles = async () => {
+      try {
+        const response = await fetch('/api/posts?status=PUBLISHED&isFeatured=true&limit=3&orderBy=publishedAt&order=desc')
+        if (response.ok) {
+          const data = await response.json()
+          // 转换数据格式
+          const articles = data.posts.map((post: any) => ({
+            id: post.id,
+            slug: post.slug,
+            title: post.title,
+            excerpt: post.excerpt || '',
+            date: new Date(post.publishedAt).toLocaleDateString('zh-CN'),
+            readTime: `${Math.ceil(post.content.length / 400)} 分钟`,
+            tags: post.tags.map((tag: any) => tag.name)
+          }))
+          setFeaturedArticles(articles)
+        }
+      } catch (error) {
+        console.error('Failed to fetch featured articles:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchFeaturedArticles()
+  }, [])
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -169,31 +204,6 @@ export default function HomePage() {
       window.removeEventListener('mousemove', handleMouseMove)
     }
   }, [mouseX, mouseY])
-
-  // 模拟文章数据
-  const featuredArticles = [
-    {
-      title: "现代前端开发的思考与实践",
-      excerpt: "探讨现代前端开发中的设计模式、性能优化和用户体验提升。从 React 18 的并发特性到 CSS-in-JS 的演进，分享一些实际项目中的经验和思考。",
-      date: "2024-01-15",
-      readTime: "8 分钟",
-      tags: ["前端", "React", "性能优化"]
-    },
-    {
-      title: "设计系统的构建与维护",
-      excerpt: "如何从零开始构建一个可扩展的设计系统，包括组件库的设计原则、文档规范和团队协作流程。分享在实际项目中遇到的挑战和解决方案。",
-      date: "2024-01-10",
-      readTime: "12 分钟",
-      tags: ["设计系统", "UI/UX", "团队协作"]
-    },
-    {
-      title: "TypeScript 进阶技巧与最佳实践",
-      excerpt: "深入探讨 TypeScript 的高级特性，包括条件类型、映射类型和模板字面量类型。通过实际案例展示如何提升代码的类型安全性和开发效率。",
-      date: "2024-01-05",
-      readTime: "15 分钟",
-      tags: ["TypeScript", "编程技巧", "最佳实践"]
-    }
-  ]
 
   return (
     <div className="relative ">
@@ -434,15 +444,42 @@ export default function HomePage() {
           </motion.div>
           
           {/* 文章网格 */}
-          <div className="grid gap-6 sm:gap-8 md:gap-12">
-            {featuredArticles.map((article, index) => (
-              <FeaturedArticleCard
-                key={article.title}
-                {...article}
-                index={index}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <div className="grid gap-6 sm:gap-8 md:gap-12">
+              {[...Array(3)].map((_, index) => (
+                <div key={index} className="animate-pulse">
+                  <div className="p-4 sm:p-6 lg:p-8 rounded-2xl border border-border/50 bg-card/20">
+                    <div className="flex justify-between mb-4">
+                      <div className="h-4 bg-muted rounded w-32"></div>
+                      <div className="flex space-x-2">
+                        <div className="h-6 bg-muted rounded-full w-16"></div>
+                        <div className="h-6 bg-muted rounded-full w-16"></div>
+                      </div>
+                    </div>
+                    <div className="h-6 bg-muted rounded w-3/4 mb-3"></div>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-muted rounded"></div>
+                      <div className="h-4 bg-muted rounded w-5/6"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : featuredArticles.length > 0 ? (
+            <div className="grid gap-6 sm:gap-8 md:gap-12">
+              {featuredArticles.map((article, index) => (
+                <FeaturedArticleCard
+                  key={article.id}
+                  {...article}
+                  index={index}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">暂无精选文章</p>
+            </div>
+          )}
           
           {/* 查看更多 */}
           <motion.div

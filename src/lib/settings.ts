@@ -13,7 +13,6 @@ export const SETTING_KEYS = {
   
   // 功能设置
   ENABLE_REGISTRATION: 'enable_registration',
-  ENABLE_COMMENTS: 'enable_comments',
   ENABLE_LIKES: 'enable_likes',
   ENABLE_ANALYTICS: 'enable_analytics',
   
@@ -209,7 +208,6 @@ export async function getEmailSettings() {
 export async function getFeatureFlags() {
   const keys: SettingKey[] = [
     SETTING_KEYS.ENABLE_REGISTRATION,
-    SETTING_KEYS.ENABLE_COMMENTS,
     SETTING_KEYS.ENABLE_LIKES,
     SETTING_KEYS.ENABLE_ANALYTICS,
     SETTING_KEYS.MAINTENANCE_MODE,

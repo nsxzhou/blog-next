@@ -11,6 +11,7 @@ import {
   validateRequest,
   safeValidateRequest 
 } from '@/lib/validations'
+import { POST_STATUS, USER_ROLES } from '@/lib/constants'
 
 // GET请求参数验证
 const getPostsSchema = paginationSchema.extend({
@@ -74,28 +75,26 @@ export async function POST(request: NextRequest) {
     }
     
     // 只有管理员可以创建文章
-    if (session.user.role !== 'ADMIN') {
+    if (session.user.role !== USER_ROLES.ADMIN) {
       return NextResponse.json({ error: '没有权限' }, { status: 403 })
     }
     
     const body = await request.json()
     
-    // 验证输入（使用通用的文章验证模式）
+    // 验证输入
     const validatedData = validateRequest(postSchema.extend({
-      summary: z.string().optional(), // 兼容旧字段名
-      coverImage: z.string().url().optional().nullable(), // 兼容旧字段名
       tagIds: z.array(z.string()).optional(), // 标签ID数组
     }), body)
     
-    // 创建文章
+    // 创建文章 - 正确映射字段名
     const article = await createArticle({
       title: validatedData.title,
       slug: validatedData.slug,
       content: validatedData.content,
-      excerpt: validatedData.summary || undefined,
-      featuredImage: validatedData.coverImage || undefined,
+      excerpt: validatedData.excerpt,
+      featuredImage: validatedData.featuredImage || undefined,
       status: validatedData.status as PostStatus,
-      isFeatured: validatedData.featured,
+      isFeatured: validatedData.isFeatured,
       tagIds: validatedData.tagIds || validatedData.tags,
       authorId: session.user.id
     })

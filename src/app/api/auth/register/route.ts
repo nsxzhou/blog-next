@@ -13,6 +13,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { signUpSchema, emailSchema, validateRequest } from '@/lib/validations'
+import { USER_ROLES } from '@/lib/constants'
 
 /**
  * 注册数据验证模式
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
         name,
         email: email.toLowerCase(),
         passwordHash,
-        role: 'USER', // 默认角色为普通用户
+        role: USER_ROLES.USER, // 默认角色为普通用户
       },
       select: {
         id: true,

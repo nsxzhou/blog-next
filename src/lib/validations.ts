@@ -36,8 +36,8 @@ export const projectStatusSchema = z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED'])
 // 用户角色验证
 export const userRoleSchema = z.enum(['USER', 'ADMIN'])
 
-// 通知类型验证
-export const notificationTypeSchema = z.enum(['INFO', 'WARNING', 'ERROR', 'SUCCESS'])
+// 通知类型验证 - 与数据库枚举保持一致
+export const notificationTypeSchema = z.enum(['SYSTEM', 'POST_LIKE', 'NEW_POST', 'MAINTENANCE'])
 
 // 邮箱验证
 export const emailSchema = z.string().email('请输入有效的邮箱地址')
@@ -54,7 +54,7 @@ export const tagSchema = z.object({
   description: z.string().max(200, '描述不能超过200个字符').optional(),
 })
 
-// 文章验证模式
+// 文章验证模式 - 与数据库字段保持一致
 export const postSchema = z.object({
   title: z.string()
     .min(1, '标题不能为空')
@@ -62,19 +62,19 @@ export const postSchema = z.object({
   slug: slugSchema,
   content: z.string()
     .min(1, '内容不能为空'),
-  summary: z.string()
+  excerpt: z.string()
     .max(500, '摘要不能超过500个字符')
     .optional(),
-  coverImage: urlSchema.optional().nullable(),
+  featuredImage: urlSchema.optional().nullable(),
   status: postStatusSchema.default('DRAFT'),
-  featured: z.boolean().default(false),
+  isFeatured: z.boolean().default(false),
   tags: z.array(z.string()).default([]),
 })
 
 // 文章更新验证模式（所有字段可选）
 export const postUpdateSchema = postSchema.partial()
 
-// 项目验证模式
+// 项目验证模式 - 与数据库字段保持一致
 export const projectSchema = z.object({
   title: z.string()
     .min(1, '标题不能为空')

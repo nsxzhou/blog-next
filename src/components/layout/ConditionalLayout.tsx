@@ -19,7 +19,7 @@ export default function ConditionalLayout({
       {!isDashboard && <Header />}
 
       {/* 邮箱验证提醒 */}
-      <EmailVerificationBanner />
+      {/* <EmailVerificationBanner /> */}
 
       {/* 主内容区域 */}
       <main className="flex-1 relative">

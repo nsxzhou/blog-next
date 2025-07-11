@@ -18,12 +18,6 @@ export default function NotificationCenter() {
     switch (type) {
       case 'POST_LIKE':
         return '❤️'
-      case 'LIKE':
-        return '❤️'
-      case 'COMMENT':
-        return '💬'
-      case 'FOLLOW':
-        return '👥'
       case 'SYSTEM':
         return '📢'
       case 'UPDATE':
@@ -38,12 +32,6 @@ export default function NotificationCenter() {
     switch (type) {
       case 'POST_LIKE':
         return '点赞'
-      case 'LIKE':
-        return '点赞'
-      case 'COMMENT':
-        return '评论'
-      case 'FOLLOW':
-        return '关注'
       case 'SYSTEM':
         return '系统'
       case 'UPDATE':

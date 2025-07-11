@@ -8,6 +8,7 @@ import {
   getDeviceStats,
   getBrowserStats 
 } from '@/lib/analytics'
+import { USER_ROLES } from '@/lib/constants'
 
 // GET /api/dashboard/stats - 获取仪表盘统计数据
 export async function GET(request: NextRequest) {
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
     }
     
     // 只有管理员可以查看统计数据
-    if (session.user.role !== 'ADMIN') {
+    if (session.user.role !== USER_ROLES.ADMIN) {
       return NextResponse.json({ error: '没有权限' }, { status: 403 })
     }
     

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getMediaList, getMediaStats } from '@/lib/media'
 import { MediaType } from '@prisma/client'
+import { USER_ROLES } from '@/lib/constants'
 
 // GET /api/media - 获取媒体列表
 export async function GET(request: NextRequest) {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get('sortOrder') as any || 'desc'
     
     // 管理员可以查看所有媒体，普通用户只能查看自己的
-    const userId = session.user.role === 'ADMIN' ? undefined : session.user.id
+    const userId = session.user.role === USER_ROLES.ADMIN ? undefined : session.user.id
     
     const result = await getMediaList({
       type: type || undefined,

@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { trackPageView } from '@/lib/analytics'
 import { v4 as uuidv4 } from 'uuid'
+import { z } from 'zod'
+import { validateRequest } from '@/lib/validations'
+
+// 追踪数据验证模式
+const trackingSchema = z.object({
+  pageUrl: z.string().min(1, '页面URL不能为空'),
+  postId: z.string().optional().nullable(),
+  duration: z.number().int().min(0).optional(),
+})
 
 // 解析用户代理字符串
 function parseUserAgent(userAgent: string) {
@@ -37,7 +46,10 @@ function parseUserAgent(userAgent: string) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { pageUrl, postId, duration } = body
+    
+    // 验证输入数据
+    const validatedData = validateRequest(trackingSchema, body)
+    const { pageUrl, postId, duration } = validatedData
     
     // 从请求头获取信息
     const userAgent = request.headers.get('user-agent') || ''
@@ -56,22 +68,28 @@ export async function POST(request: NextRequest) {
     // 这里简化处理，实际应该从session中获取
     const userId = null
     
-    // 记录访问
-    await trackPageView({
-      sessionId,
-      postId: postId || undefined,
-      userId: userId || undefined,
-      pageUrl,
-      ipAddress: ipAddress || undefined,
-      userAgent: userAgent || undefined,
-      referrer: referer || undefined,
-      device: device || undefined,
-      browser: browser || undefined,
-      os: os || undefined,
-      country: undefined,
-      city: undefined,
-      duration
-    })
+    // 记录访问 - 添加错误处理
+    try {
+      await trackPageView({
+        sessionId,
+        postId: postId || undefined,
+        userId: userId || undefined,
+        pageUrl,
+        ipAddress: ipAddress || undefined,
+        userAgent: userAgent || undefined,
+        referrer: referer || undefined,
+        device: device || undefined,
+        browser: browser || undefined,
+        os: os || undefined,
+        country: undefined,
+        city: undefined,
+        duration
+      })
+    } catch (trackError) {
+      // 记录错误但不中断请求
+      console.error('记录页面访问失败:', trackError)
+      // 继续执行，不影响用户体验
+    }
     
     // 设置session cookie
     const response = NextResponse.json({ success: true })
@@ -86,7 +104,15 @@ export async function POST(request: NextRequest) {
     
     return response
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ 
+        error: '输入验证失败', 
+        details: error.errors 
+      }, { status: 400 })
+    }
+    
     console.error('追踪页面访问失败:', error)
-    return NextResponse.json({ error: '追踪失败' }, { status: 500 })
+    // 返回成功状态，避免影响前端用户体验
+    return NextResponse.json({ success: true, error: '追踪失败但不影响使用' })
   }
 }

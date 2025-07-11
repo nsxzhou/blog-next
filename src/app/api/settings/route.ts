@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { getSettings, saveSettings, clearSettingsCache } from '@/lib/settings'
 import { z } from 'zod'
 import { settingSchema, settingsSchema, validateRequest } from '@/lib/validations'
+import { USER_ROLES } from '@/lib/constants'
 
 // GET /api/settings - 获取所有设置
 export async function GET() {
@@ -15,26 +16,17 @@ export async function GET() {
     }
     
     // 只有管理员可以查看设置
-    if (session.user.role !== 'ADMIN') {
+    if (session.user.role !== USER_ROLES.ADMIN) {
       return NextResponse.json({ error: '没有权限' }, { status: 403 })
     }
     
     const settings = await getSettings()
     
-    // 转换为键值对格式
+    // 转换为键值对格式 - 处理Json类型字段
     const settingsMap: Record<string, any> = {}
     for (const setting of settings) {
-      try {
-        if (setting.value === null) {
-          settingsMap[setting.key] = null
-        } else if (typeof setting.value === 'string') {
-          settingsMap[setting.key] = JSON.parse(setting.value)
-        } else {
-          settingsMap[setting.key] = setting.value
-        }
-      } catch {
-        settingsMap[setting.key] = setting.value
-      }
+      // value字段在数据库中是Json类型，直接使用
+      settingsMap[setting.key] = setting.value
     }
     
     return NextResponse.json(settingsMap)
@@ -54,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 只有管理员可以修改设置
-    if (session.user.role !== 'ADMIN') {
+    if (session.user.role !== USER_ROLES.ADMIN) {
       return NextResponse.json({ error: '没有权限' }, { status: 403 })
     }
     

@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { getMediaById, deleteMedia } from '@/lib/media'
 import { unlink } from 'fs/promises'
 import { join } from 'path'
+import { USER_ROLES } from '@/lib/constants'
 
 // DELETE /api/media/[id] - 删除媒体
 export async function DELETE(
@@ -26,7 +27,7 @@ export async function DELETE(
     }
     
     // 检查权限：只有上传者或管理员可以删除
-    if (media.uploader.id !== session.user.id && session.user.role !== 'ADMIN') {
+    if (media.uploader.id !== session.user.id && session.user.role !== USER_ROLES.ADMIN) {
       return NextResponse.json({ error: '没有权限' }, { status: 403 })
     }
     

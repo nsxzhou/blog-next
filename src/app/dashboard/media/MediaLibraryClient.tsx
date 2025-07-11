@@ -230,14 +230,23 @@ export default function MediaLibraryClient() {
   const storagePercentage = stats ? (stats.totalSize / (1024 * 1024 * 1024)) * 100 : 0 // 假设1GB限制
 
   return (
-    <>
-      <button
-        onClick={() => setShowUploadZone(true)}
-        className="fixed bottom-8 right-8 inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors shadow-lg"
-      >
-        <Upload className="w-4 h-4" />
-        <span>上传文件</span>
-      </button>
+    <div className="container mx-auto max-w-7xl p-6 lg:p-8 space-y-8">
+      {/* 页面标题和操作按钮 */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">媒体库</h1>
+          <p className="text-muted-foreground mt-1">
+            管理您的图片、视频和文件
+          </p>
+        </div>
+        <button
+          onClick={() => setShowUploadZone(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+        >
+          <Upload className="w-4 h-4" />
+          <span>上传文件</span>
+        </button>
+      </div>
 
       {/* 错误提示 */}
       {error && (
@@ -628,6 +637,6 @@ export default function MediaLibraryClient() {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   )
 }

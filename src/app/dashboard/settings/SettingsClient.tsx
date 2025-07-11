@@ -122,7 +122,6 @@ export default function SettingsClient() {
       case 'features':
         return [
           SETTING_KEYS.ENABLE_REGISTRATION,
-          SETTING_KEYS.ENABLE_COMMENTS,
           SETTING_KEYS.ENABLE_LIKES,
           SETTING_KEYS.ENABLE_ANALYTICS,
           SETTING_KEYS.MAINTENANCE_MODE,
@@ -385,27 +384,6 @@ export default function SettingsClient() {
                       className={cn(
                         "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
                         settings[SETTING_KEYS.ENABLE_REGISTRATION] ? "translate-x-6" : "translate-x-1"
-                      )}
-                    />
-                  </button>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">启用评论</p>
-                    <p className="text-sm text-muted-foreground">允许用户评论文章</p>
-                  </div>
-                  <button
-                    onClick={() => updateSetting(SETTING_KEYS.ENABLE_COMMENTS, !settings[SETTING_KEYS.ENABLE_COMMENTS])}
-                    className={cn(
-                      "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
-                      settings[SETTING_KEYS.ENABLE_COMMENTS] ? "bg-primary" : "bg-muted"
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                        settings[SETTING_KEYS.ENABLE_COMMENTS] ? "translate-x-6" : "translate-x-1"
                       )}
                     />
                   </button>
