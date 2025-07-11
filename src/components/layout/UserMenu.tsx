@@ -69,17 +69,7 @@ export default function UserMenu({ user }: UserMenuProps) {
       href: '/dashboard',
       icon: User,
       label: '仪表板',
-    },
-    {
-      href: '/posts',
-      icon: FileText,
-      label: '我的文章',
-    },
-    {
-      href: '/settings',
-      icon: Settings,
-      label: '设置',
-    },
+    }
   ]
 
   return (

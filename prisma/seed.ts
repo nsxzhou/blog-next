@@ -3,8 +3,8 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
-  // 创建默认分类
-  const categories = await prisma.category.createMany({
+  // 创建默认标签
+  const defaultTags = await prisma.tag.createMany({
     data: [
       {
         name: '技术分享',
@@ -51,7 +51,7 @@ async function main() {
   })
 
   console.log('数据库种子数据创建成功!')
-  console.log('分类数量:', categories.count)
+  console.log('分类数量:', defaultTags.count)
   console.log('标签数量:', tags.count)
   console.log('管理员用户:', adminUser.email)
 }

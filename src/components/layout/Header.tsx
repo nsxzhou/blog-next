@@ -9,6 +9,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import UserMenu from './UserMenu'
 import { useSession } from 'next-auth/react'
+import SearchModal from '@/components/search/SearchModal'
+import { useSearchModal } from '@/hooks/useSearchModal'
+import NotificationCenter from '@/components/NotificationCenter'
+import SiteTitle from './SiteTitle'
 
 const navigation = [
   { name: '首页', href: '/' },
@@ -25,6 +29,7 @@ export default function Header() {
   const [lastScrollY, setLastScrollY] = useState(0)
   const { data: session } = useSession()
   const pathname = usePathname()
+  const { isOpen: isSearchOpen, openSearch, closeSearch } = useSearchModal()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -69,17 +74,7 @@ export default function Header() {
         <nav className="container mx-auto px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* Logo - 极简设计 */}
-            <Link
-              href="/"
-              className={cn(
-                'font-mono text-lg tracking-tight transition-colors',
-                scrolled || !isHomePage
-                  ? 'text-foreground'
-                  : 'text-foreground/90'
-              )}
-            >
-              思维笔记
-            </Link>
+            <SiteTitle scrolled={scrolled} isHomePage={isHomePage} />
 
             {/* Desktop Navigation - 居中 */}
             <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center space-x-8">
@@ -113,8 +108,33 @@ export default function Header() {
 
             {/* Right Actions */}
             <div className="flex items-center space-x-3">
+              {/* Search Button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={openSearch}
+                className={cn(
+                  'relative p-2 rounded-md transition-colors',
+                  'hover:bg-accent/50',
+                  'text-muted-foreground hover:text-foreground',
+                  'group'
+                )}
+                aria-label="搜索"
+                title="搜索 (⌘K)"
+              >
+                <Search className="w-5 h-5" />
+                {/* 键盘快捷键提示 */}
+                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 text-xs bg-background border border-border rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  <kbd className="px-1 py-0.5 bg-muted rounded text-xs mr-0.5">⌘</kbd>
+                  <kbd className="px-1 py-0.5 bg-muted rounded text-xs">K</kbd>
+                </span>
+              </motion.button>
+              
               {/* Theme Toggle */}
               <ThemeToggle />
+              
+              {/* Notification Center - 只在用户登录时显示 */}
+              {session && <NotificationCenter />}
 
               {/* User Menu */}
               {session ? (
@@ -204,6 +224,9 @@ export default function Header() {
 
       {/* 占位元素，防止内容被固定导航栏遮挡 */}
       {!isHomePage && <div className="h-16" />}
+      
+      {/* 搜索模态框 */}
+      <SearchModal isOpen={isSearchOpen} onClose={closeSearch} />
     </>
   )
 }

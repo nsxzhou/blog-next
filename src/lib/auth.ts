@@ -17,6 +17,7 @@ import { prisma } from "./prisma"
 import { Session } from "next-auth"
 import { JWT } from "next-auth/jwt"
 import bcrypt from "bcryptjs"
+import jwt from "jsonwebtoken"
 
 /**
  * NextAuth 核心配置对象
@@ -109,11 +110,18 @@ export const authConfig = {
 
         // 第六步：验证成功 - 返回用户信息
         console.log("登录成功：", user.email)
+        
         return {
           id: user.id,
           email: user.email,
           name: user.name,
           role: user.role, // 用户角色：USER 或 ADMIN
+          avatarUrl: user.avatarUrl,
+          bio: user.bio,
+          website: user.website,
+          socialLinks: user.socialLinks,
+          emailVerified: user.emailVerified,
+          lastLoginAt: user.lastLoginAt,
         }
       },
     }),
@@ -167,6 +175,40 @@ export const authConfig = {
    */
   callbacks: {
     /**
+     * SignIn 回调函数
+     * 
+     * 作用：在用户登录成功后执行
+     * 
+     * 执行时机：
+     * - 邮箱密码登录成功后
+     * - OAuth登录成功后
+     * 
+     * 目的：
+     * - 更新用户的最后登录时间
+     * - 记录登录日志（可选）
+     * - 返回 true 允许登录，返回 false 阻止登录
+     * 
+     * @param user 用户对象
+     * @param account 账户对象（OAuth登录时存在）
+     * @returns 是否允许登录
+     */
+    signIn: async ({ user, account }) => {
+      // 只有在用户存在且有ID时才更新登录时间
+      if (user?.id) {
+        try {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { lastLoginAt: new Date() }
+          })
+        } catch (error) {
+          console.error("更新最后登录时间失败:", error)
+          // 即使更新失败也允许登录
+        }
+      }
+      return true // 允许登录
+    },
+    
+    /**
      * Session 回调函数
      * 
      * 作用：自定义返回给客户端的会话数据
@@ -178,6 +220,7 @@ export const authConfig = {
      * 目的：
      * - 添加用户 ID 到会话中（默认不包含）
      * - 添加用户角色到会话中（用于权限控制）
+     * - 添加用户的其他信息（头像、简介等）
      * 
      * @param session 原始会话对象
      * @param token JWT 令牌对象
@@ -187,9 +230,16 @@ export const authConfig = {
       ...session, // 保留原有的会话信息
       user: {
         ...session.user, // 保留原有的用户信息
-        id: token.sub,   // 添加用户 ID（从 JWT 的 sub 字段获取）
-        role: token.role, // 添加用户角色（从 JWT 的 role 字段获取）
+        id: token.id || token.sub,   // 添加用户 ID
+        email: token.email,
+        name: token.name,
+        role: token.role, // 添加用户角色
+        avatarUrl: token.avatarUrl,
+        bio: token.bio,
+        website: token.website,
+        emailVerified: token.emailVerified,
       },
+      accessToken: token.accessToken, // 添加访问令牌到会话
     }),
 
     /**
@@ -204,16 +254,41 @@ export const authConfig = {
      * 目的：
      * - 将用户角色信息存储到 JWT 中
      * - 确保用户权限信息在 JWT 中持久化
+     * - 存储用户的其他信息
      * 
      * @param token JWT 令牌对象
      * @param user 用户对象（仅在登录时存在）
+     * @param account 账户对象
      * @returns 自定义的 JWT 令牌
      */
-    jwt: ({ token, user }: { token: JWT; user?: any }) => {
+    jwt: ({ token, user, account }: { token: JWT; user?: any; account?: any }) => {
       // 只有在用户登录时才有 user 对象
       if (user) {
+        token.id = user.id
+        token.email = user.email
+        token.name = user.name
         token.role = user.role // 将用户角色存储到 JWT 中
+        token.avatarUrl = user.avatarUrl
+        token.bio = user.bio
+        token.website = user.website
+        token.emailVerified = user.emailVerified
+        
+        // 为凭证登录生成访问令牌
+        if (!account) {
+          const accessToken = jwt.sign(
+            { sub: user.id, email: user.email, role: user.role },
+            process.env.NEXTAUTH_SECRET!,
+            { expiresIn: '7d' }
+          )
+          token.accessToken = accessToken
+        }
       }
+      
+      // 保存OAuth访问令牌
+      if (account) {
+        token.accessToken = account.access_token
+      }
+      
       return token
     },
   },
@@ -253,9 +328,16 @@ export const authConfig = {
 }
 
 /**
- * 导出 NextAuth 实例和相关函数
+ * 导出配置对象
  * 
- * NextAuth v4 配置正确的导出方式
+ * NextAuth v4 在 App Router 中需要导出配置对象，
+ * 而不是直接导出 NextAuth 实例
+ */
+export const authOptions = authConfig
+
+/**
+ * 导出 NextAuth 处理器
+ * 用于 API 路由
  */
 export default NextAuth(authConfig)
 

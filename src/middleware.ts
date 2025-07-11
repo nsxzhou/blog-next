@@ -19,6 +19,26 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
+import { SETTING_KEYS } from '@/lib/settings'
+
+// 使用边缘运行时兼容的方式获取维护模式状态
+async function getMaintenanceStatus(): Promise<{ enabled: boolean; message: string }> {
+  try {
+    // 在边缘运行时中，我们需要通过API获取设置
+    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/settings/public`)
+    if (!response.ok) {
+      return { enabled: false, message: '' }
+    }
+    
+    const data = await response.json()
+    return {
+      enabled: data.site?.maintenance_mode === true || data.site?.maintenance_mode === 'true',
+      message: data.site?.maintenance_message || '网站正在维护中，请稍后访问'
+    }
+  } catch {
+    return { enabled: false, message: '' }
+  }
+}
 
 /**
  * 需要登录保护的路由列表
@@ -77,6 +97,38 @@ export default async function middleware(req: NextRequest) {
   // 获取用户当前访问的路径
   // 例如：用户访问 /dashboard，pathname 就是 "/dashboard"
   const pathname = req.nextUrl.pathname
+
+  // 排除的路径：API路由、静态资源、认证页面
+  const excludedPaths = [
+    '/api/',
+    '/_next/',
+    '/favicon',
+    '/auth/',
+  ]
+  
+  // 检查是否是排除的路径
+  const isExcluded = excludedPaths.some(path => pathname.startsWith(path))
+  
+  // 如果不是排除的路径，检查维护模式
+  if (!isExcluded && pathname !== '/maintenance') {
+    const maintenance = await getMaintenanceStatus()
+    
+    if (maintenance.enabled) {
+      // 获取用户 token 以检查是否是管理员
+      const token = await getToken({ 
+        req, 
+        secret: process.env.NEXTAUTH_SECRET 
+      })
+      
+      // 管理员可以继续访问
+      if (token?.role !== 'ADMIN') {
+        // 非管理员重定向到维护页面
+        const url = new URL("/maintenance", req.url)
+        url.searchParams.set('message', maintenance.message)
+        return NextResponse.redirect(url)
+      }
+    }
+  }
 
   /**
    * 第一步：路由类型判断

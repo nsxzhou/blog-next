@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Providers } from '@/components/providers'
-import Header from '@/components/layout/Header'
-import Footer from '@/components/layout/Footer'
+import ConditionalLayout from '@/components/layout/ConditionalLayout'
+import AnalyticsTracker from '@/components/AnalyticsTracker'
 import './globals.css'
 import { cn } from '@/lib/utils'
+import { getSiteSettings } from '@/lib/settings'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -18,32 +19,50 @@ const geistMono = Geist_Mono({
   display: 'swap',
 })
 
-export const metadata: Metadata = {
-  title: {
-    default: '思维笔记',
-    template: '%s | 思维笔记',
-  },
-  description: '用心记录，让思想自由流动',
-  keywords: ['博客', '技术', '设计', '思考', '创意'],
-  authors: [{ name: '思维笔记' }],
-  creator: '思维笔记',
-  openGraph: {
-    type: 'website',
-    locale: 'zh_CN',
-    url: 'https://flowspace.blog',
-    siteName: '思维笔记',
-    title: '思维笔记',
-    description: '用心记录，让思想自由流动',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: '思维笔记',
-    description: '用心记录，让思想自由流动',
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const siteSettings = await getSiteSettings()
+  
+  const title = siteSettings.site_title || '思维笔记'
+  const description = siteSettings.site_description || '用心记录，让思想自由流动'
+  const keywords = siteSettings.site_keywords 
+    ? siteSettings.site_keywords.split(',').map((k: string) => k.trim())
+    : ['博客', '技术', '设计', '思考', '创意']
+  const url = siteSettings.site_url || 'https://flowspace.blog'
+  
+  return {
+    title: {
+      default: title,
+      template: `%s | ${title}`,
+    },
+    description,
+    keywords,
+    authors: [{ name: title }],
+    creator: title,
+    openGraph: {
+      type: 'website',
+      locale: 'zh_CN',
+      url,
+      siteName: title,
+      title,
+      description,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+    ...(siteSettings.site_favicon && {
+      icons: {
+        icon: siteSettings.site_favicon,
+        shortcut: siteSettings.site_favicon,
+        apple: siteSettings.site_favicon,
+      }
+    })
+  }
 }
 
 export const viewport: Viewport = {
@@ -151,16 +170,11 @@ export default function RootLayout({
 
           {/* 主要布局结构 */}
           <div className="relative flex flex-col min-h-screen">
-            <Header />
-
-            {/* 主内容区域 */}
-            <main className="flex-1 relative">
-              {/* 内容包装器 - 提供呼吸感 */}
-              <div className="animate-fade-in">{children}</div>
-            </main>
-
-            <Footer />
+            <ConditionalLayout>{children}</ConditionalLayout>
           </div>
+
+          {/* 分析追踪器 */}
+          <AnalyticsTracker />
 
           {/* 全局装饰元素 */}
           <div className="pointer-events-none fixed inset-0 z-50">

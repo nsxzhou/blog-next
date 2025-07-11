@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "../styles/article.css";
+@import "../styles/search.css";
 
 /* ====== 自定义主题变量 ====== */
 @layer base {

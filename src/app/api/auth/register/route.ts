@@ -12,11 +12,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { signUpSchema, emailSchema, validateRequest } from '@/lib/validations'
 
 /**
  * 注册数据验证模式
  *
  * 使用 zod 库进行输入验证，确保数据格式正确
+ * @deprecated 使用通用的 signUpSchema 替代
  */
 const registerSchema = z.object({
   name: z
@@ -39,24 +41,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     console.log('注册请求数据:', { ...body, password: '[已隐藏]' })
 
-    // 第二步：验证输入数据
-    const validation = registerSchema.safeParse(body)
-    if (!validation.success) {
-      console.log('注册数据验证失败:', validation.error.errors)
-      return NextResponse.json(
-        {
-          error: '输入数据无效',
-          details: validation.error.errors.map((err) => err.message),
-        },
-        { status: 400 }
-      )
-    }
-
-    const { name, email, password } = validation.data
+    // 第二步：验证输入数据（使用通用验证模式）
+    const validatedData = validateRequest(signUpSchema, body)
+    const { name, email, password } = validatedData
 
     // 第三步：检查邮箱是否已存在
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { email: email.toLowerCase() },
     })
 
     if (existingUser) {
@@ -72,7 +63,7 @@ export async function POST(request: NextRequest) {
     const newUser = await prisma.user.create({
       data: {
         name,
-        email,
+        email: email.toLowerCase(),
         passwordHash,
         role: 'USER', // 默认角色为普通用户
       },
@@ -96,6 +87,16 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: '输入数据无效',
+          details: error.errors,
+        },
+        { status: 400 }
+      )
+    }
+
     console.error('注册过程中发生错误:', error)
 
     // 处理数据库唯一约束错误
@@ -125,15 +126,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '缺少邮箱参数' }, { status: 400 })
     }
 
-    // 验证邮箱格式
-    const emailValidation = z.string().email().safeParse(email)
-    if (!emailValidation.success) {
-      return NextResponse.json({ error: '邮箱格式无效' }, { status: 400 })
-    }
+    // 验证邮箱格式（使用通用验证模式）
+    const validatedEmail = validateRequest(emailSchema, email)
 
     // 检查邮箱是否已存在
     const existingUser = await prisma.user.findUnique({
-      where: { email: emailValidation.data.toLowerCase() },
+      where: { email: validatedEmail.toLowerCase() },
       select: { id: true },
     })
 
@@ -142,6 +140,10 @@ export async function GET(request: NextRequest) {
       message: existingUser ? '邮箱已被使用' : '邮箱可用',
     })
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: '邮箱格式无效' }, { status: 400 })
+    }
+    
     console.error('检查邮箱可用性时发生错误:', error)
     return NextResponse.json({ error: '服务器内部错误' }, { status: 500 })
   }

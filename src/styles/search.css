@@ -1,0 +1,168 @@
+/* 搜索功能相关样式 */
+
+/* 搜索模态框 */
+.search-modal {
+  /* 防止背景滚动 */
+  position: fixed;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 搜索高亮样式 */
+mark {
+  background-color: hsl(var(--primary) / 0.2);
+  color: hsl(var(--primary));
+  padding: 0 0.125rem;
+  border-radius: 0.125rem;
+  font-weight: 500;
+}
+
+/* 搜索结果项悬停效果 */
+.search-result-item {
+  transition: all 0.2s ease;
+}
+
+.search-result-item:hover {
+  background-color: hsl(var(--muted) / 0.5);
+}
+
+/* 搜索输入框 */
+.search-input {
+  caret-color: hsl(var(--primary));
+}
+
+/* 键盘快捷键样式 */
+kbd {
+  display: inline-block;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  line-height: 1;
+  color: hsl(var(--muted-foreground));
+  background-color: hsl(var(--muted));
+  border-radius: 0.25rem;
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 1px 0 1px hsl(var(--border) / 0.2);
+}
+
+/* 搜索建议标签 */
+.search-suggestion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.search-suggestion:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px hsl(var(--foreground) / 0.1);
+}
+
+/* 搜索历史 */
+.search-history-item {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.search-history-item::before {
+  content: '⏱';
+  position: absolute;
+  left: 0;
+  opacity: 0.5;
+}
+
+/* 无结果状态 */
+.search-no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 2rem;
+  text-align: center;
+}
+
+/* 搜索加载动画 */
+.search-loading {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid hsl(var(--primary) / 0.2);
+  border-top-color: hsl(var(--primary));
+  border-radius: 50%;
+  animation: search-spin 0.8s linear infinite;
+}
+
+@keyframes search-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 响应式调整 */
+@media (max-width: 640px) {
+  .search-modal-content {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+  
+  .search-input {
+    font-size: 1rem;
+  }
+}
+
+/* 动画 */
+@keyframes search-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.search-result-enter {
+  animation: search-fade-in 0.3s ease forwards;
+}
+
+/* 暗色模式优化 */
+.dark mark {
+  background-color: hsl(var(--primary) / 0.3);
+  color: hsl(var(--primary-foreground));
+}
+
+/* 搜索类型标签 */
+.search-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 0.25rem;
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+/* 平滑滚动优化 */
+.search-results-container {
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+/* 焦点管理 */
+.search-modal:focus-within {
+  outline: none;
+}
+
+.search-result-item:focus {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: -2px;
+}
