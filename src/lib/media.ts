@@ -29,7 +29,6 @@ export async function createMedia(data: {
   width?: number
   height?: number
   userId: string
-  metadata?: any
 }) {
   return prisma.media.create({
     data: {
@@ -40,8 +39,7 @@ export async function createMedia(data: {
       mimeType: data.mimeType,
       width: data.width,
       height: data.height,
-      uploaderId: data.userId,
-      metadata: data.metadata || {}
+      uploaderId: data.userId
     }
   })
 }
@@ -65,7 +63,7 @@ export async function getMediaList(params: MediaQueryParams = {}) {
   }
 
   if (userId) {
-    where.uploadedById = userId
+    where.uploaderId = userId
   }
 
   if (search) {
@@ -79,7 +77,7 @@ export async function getMediaList(params: MediaQueryParams = {}) {
     prisma.media.findMany({
       where,
       include: {
-        uploadedBy: {
+        uploader: {
           select: {
             id: true,
             name: true,

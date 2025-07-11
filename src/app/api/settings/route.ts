@@ -65,12 +65,13 @@ export async function POST(request: NextRequest) {
     
     if (Array.isArray(body)) {
       // 数组格式
-      settingsToSave = validateRequest(settingsSchema, body)
+      settingsToSave = validateRequest(settingsSchema, body) as Array<{ key: string; value: any; description?: string }>
     } else {
       // 对象格式：将对象转换为数组
       settingsToSave = Object.entries(body).map(([key, value]) => ({
         key,
-        value
+        value: value ?? null, // 使用 nullish coalescing 确保 value 有值
+        description: undefined
       }))
     }
     

@@ -192,7 +192,7 @@ export const authConfig = {
      * @param account 账户对象（OAuth登录时存在）
      * @returns 是否允许登录
      */
-    signIn: async ({ user, account }) => {
+    signIn: async ({ user, account }: any) => {
       // 只有在用户存在且有ID时才更新登录时间
       if (user?.id) {
         try {

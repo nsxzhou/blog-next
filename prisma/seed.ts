@@ -25,8 +25,8 @@ async function main() {
     skipDuplicates: true
   })
 
-  // 创建默认标签
-  const tags = await prisma.tag.createMany({
+  // 创建技术标签
+  const techTags = await prisma.tag.createMany({
     data: [
       { name: 'JavaScript', slug: 'javascript' },
       { name: 'TypeScript', slug: 'typescript' },
@@ -52,7 +52,7 @@ async function main() {
 
   console.log('数据库种子数据创建成功!')
   console.log('分类数量:', defaultTags.count)
-  console.log('标签数量:', tags.count)
+  console.log('标签数量:', techTags.count)
   console.log('管理员用户:', adminUser.email)
 }
 

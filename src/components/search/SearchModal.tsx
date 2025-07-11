@@ -136,7 +136,7 @@ export default function SearchModal({ isOpen, onClose, initialType = 'all' }: Se
     localStorage.setItem('searchHistory', JSON.stringify(newHistory))
     
     // 导航到相应页面
-    if (result.type === 'article') {
+    if (result.type === 'post') {
       router.push(`/articles/${result.slug}`)
     } else if (result.type === 'tag') {
       router.push(`/articles?tag=${result.slug}`)

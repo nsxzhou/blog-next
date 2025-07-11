@@ -17,9 +17,10 @@ const updateTagSchema = z.object({
 // GET /api/tags/[id] - 获取单个标签
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params
     const tag = await prisma.tag.findUnique({
       where: { id: params.id },
       include: {
@@ -45,9 +46,10 @@ export async function GET(
 // PUT /api/tags/[id] - 更新标签
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
@@ -101,9 +103,10 @@ export async function PUT(
 // DELETE /api/tags/[id] - 删除标签
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {

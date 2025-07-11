@@ -152,8 +152,7 @@ export default function ThemeSettingsPage() {
                   primaryColor === color.value && "ring-2 ring-offset-2 ring-offset-background"
                 )}
                 style={{ 
-                  backgroundColor: color.value,
-                  ringColor: primaryColor === color.value ? color.value : undefined
+                  backgroundColor: color.value
                 }}
               >
                 {primaryColor === color.value && (

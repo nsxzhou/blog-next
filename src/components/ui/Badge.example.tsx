@@ -1,6 +1,6 @@
 // Badge 组件使用示例
 
-import Badge from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/Badge";
 
 export default function BadgeExample() {
   return (
@@ -13,7 +13,7 @@ export default function BadgeExample() {
           <Badge variant="secondary">Secondary</Badge>
           <Badge variant="success">Success</Badge>
           <Badge variant="warning">Warning</Badge>
-          <Badge variant="danger">Danger</Badge>
+          <Badge variant="destructive">Danger</Badge>
           <Badge variant="info">Info</Badge>
         </div>
       </div>
@@ -45,7 +45,7 @@ export default function BadgeExample() {
         <div className="flex gap-2">
           <Badge variant="success" size="sm">已发布</Badge>
           <Badge variant="warning" size="sm">草稿</Badge>
-          <Badge variant="danger" size="sm">已归档</Badge>
+          <Badge variant="destructive" size="sm">已归档</Badge>
         </div>
       </div>
 

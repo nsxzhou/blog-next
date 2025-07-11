@@ -108,11 +108,7 @@ export async function POST(request: NextRequest) {
       mimeType: file.type,
       width,
       height,
-      userId: session.user.id,
-      metadata: {
-        originalName,
-        uploadedAt: new Date().toISOString()
-      }
+      userId: session.user.id
     })
     
     return NextResponse.json({

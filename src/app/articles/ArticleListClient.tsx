@@ -146,7 +146,7 @@ const ArticleItem = React.memo(function ArticleItem({
 
 export default function ArticleListClient({ articles }: { articles: PostListItem[] }) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const articleRefs = useRef<(HTMLElement | null)[]>([])
+  const articleRefs = useRef<(HTMLDivElement | null)[]>([])
   const [visibleArticles, setVisibleArticles] = useState<Set<string>>(new Set())
   
   const { scrollY } = useScroll()
@@ -227,7 +227,9 @@ export default function ArticleListClient({ articles }: { articles: PostListItem
               {articles.map((article, index) => (
                 <div
                   key={article.id}
-                  ref={el => articleRefs.current[index] = el}
+                  ref={el => {
+                    articleRefs.current[index] = el
+                  }}
                   data-article-id={article.id}
                 >
                   <ArticleItem 

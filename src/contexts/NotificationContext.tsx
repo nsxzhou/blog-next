@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
-import { Notification } from '@prisma/client'
+import type { Notification } from '@prisma/client'
 
 interface NotificationContextType {
   notifications: Notification[]
@@ -133,7 +133,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         const isNew = new Date().getTime() - new Date(latestUnread.createdAt).getTime() < 5000
         if (isNew) {
           new Notification(latestUnread.title, {
-            body: latestUnread.content,
+            body: latestUnread.content || '',
             icon: '/favicon.ico'
           })
         }

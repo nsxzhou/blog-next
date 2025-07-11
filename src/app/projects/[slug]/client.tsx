@@ -83,7 +83,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
             )}
             <div className="flex items-center gap-1">
               <Code className="w-4 h-4" />
-              <span>{project.techStack.length} 项技术</span>
+              <span>{Array.isArray(project.techStack) ? project.techStack.length : 0} 项技术</span>
             </div>
           </div>
 
@@ -107,7 +107,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Button variant="outline" size="sm">
+                <Button variant="secondary" size="sm">
                   <Github className="w-4 h-4 mr-2" />
                   查看源码
                 </Button>
@@ -125,7 +125,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectDetai
         >
           <h2 className="text-xl font-semibold mb-4">技术栈</h2>
           <div className="flex flex-wrap gap-2">
-            {project.techStack.map((tech) => (
+            {Array.isArray(project.techStack) && (project.techStack as string[]).map((tech) => (
               <Badge key={tech} variant="outline">
                 {tech}
               </Badge>

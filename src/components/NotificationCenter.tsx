@@ -16,6 +16,8 @@ export default function NotificationCenter() {
   // 获取通知图标
   const getNotificationIcon = (type: string) => {
     switch (type) {
+      case 'POST_LIKE':
+        return '❤️'
       case 'LIKE':
         return '❤️'
       case 'COMMENT':
@@ -34,6 +36,8 @@ export default function NotificationCenter() {
   // 获取通知类型文本
   const getNotificationTypeText = (type: string) => {
     switch (type) {
+      case 'POST_LIKE':
+        return '点赞'
       case 'LIKE':
         return '点赞'
       case 'COMMENT':
@@ -143,8 +147,8 @@ export default function NotificationCenter() {
                           if (!notification.isRead) {
                             markAsRead(notification.id)
                           }
-                          if (notification.link) {
-                            window.location.href = notification.link
+                          if (notification.data && typeof notification.data === 'object' && 'link' in notification.data) {
+                            window.location.href = (notification.data as any).link
                           }
                         }}
                       >
@@ -184,7 +188,7 @@ export default function NotificationCenter() {
                                 })}
                               </span>
                               
-                              {notification.link && (
+                              {notification.data && typeof notification.data === 'object' && 'link' in notification.data && (
                                 <ExternalLink className="w-3 h-3 text-muted-foreground" />
                               )}
                             </div>

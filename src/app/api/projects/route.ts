@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       coverImage: validatedData.coverImage || undefined,
       demoUrl: validatedData.demoUrl || undefined,
       githubUrl: validatedData.githubUrl || undefined,
-      techStack: validatedData.techStack,
+      techStack: validatedData.techStack || [],
       status: validatedData.status as ProjectStatus,
       featured: validatedData.featured,
       order: validatedData.order

@@ -24,7 +24,7 @@ export default function SearchResults({
   // 获取类型图标
   const getTypeIcon = (type: SearchResult['type']) => {
     switch (type) {
-      case 'article':
+      case 'post':
         return <FileText className="w-5 h-5" />
       case 'tag':
         return <Hash className="w-5 h-5" />
@@ -38,7 +38,7 @@ export default function SearchResults({
   // 获取类型标签
   const getTypeLabel = (type: SearchResult['type']) => {
     switch (type) {
-      case 'article':
+      case 'post':
         return '文章'
       case 'tag':
         return '标签'
@@ -125,16 +125,16 @@ export default function SearchResults({
                       {/* 元数据 */}
                       {result.metadata && (
                         <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                          {result.metadata.date && (
+                          {result.metadata.publishedAt && (
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              {new Date(result.metadata.date).toLocaleDateString('zh-CN')}
+                              {new Date(result.metadata.publishedAt).toLocaleDateString('zh-CN')}
                             </span>
                           )}
-                          {result.metadata.readTime && (
+                          {result.metadata.readingTime && (
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
-                              {result.metadata.readTime}
+                              {result.metadata.readingTime}
                             </span>
                           )}
                           {result.metadata.tags && result.metadata.tags.length > 0 && (
@@ -144,7 +144,7 @@ export default function SearchResults({
                                   key={i}
                                   className="px-1.5 py-0.5 bg-muted rounded"
                                 >
-                                  {tag}
+                                  {typeof tag === 'string' ? tag : tag.name}
                                 </span>
                               ))}
                               {result.metadata.tags.length > 3 && (

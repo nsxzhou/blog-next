@@ -40,9 +40,9 @@ export const getArticles = cache(async (params?: PostQueryParams): Promise<PostL
     }),
     ...(search && {
       OR: [
-        { title: { contains: search, mode: 'insensitive' } },
-        { excerpt: { contains: search, mode: 'insensitive' } },
-        { content: { contains: search, mode: 'insensitive' } }
+        { title: { contains: search } },
+        { excerpt: { contains: search } },
+        { content: { contains: search } }
       ]
     })
   }
@@ -187,8 +187,8 @@ export const getArticleBySlug = cache(async (slug: string): Promise<PostDetail |
 
   return {
     ...post,
-    prevPost,
-    nextPost,
+    prevPost: prevPost || undefined,
+    nextPost: nextPost || undefined,
     relatedPosts
   }
 })

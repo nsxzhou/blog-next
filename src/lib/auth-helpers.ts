@@ -150,7 +150,7 @@ export async function requireAdmin() {
   const user = await requireAuth()
   
   // 检查用户角色是否为管理员
-  if (user.role !== "admin") {
+  if (user.role !== "ADMIN") {
     // 如果不是管理员，跳转到无权限页面
     redirect("/unauthorized")
   }
@@ -237,7 +237,7 @@ export async function canAccessResource(
   }
   
   // 如果允许管理员访问，且当前用户是管理员，则允许访问
-  if (allowAdmin && user.role === "admin") {
+  if (allowAdmin && user.role === "ADMIN") {
     return true
   }
   
@@ -294,7 +294,7 @@ export async function checkResourcePermission(
     }
   }
   
-  if (allowAdmin && user.role === "admin") {
+  if (allowAdmin && user.role === "ADMIN") {
     return {
       hasPermission: true,
       reason: "管理员权限"

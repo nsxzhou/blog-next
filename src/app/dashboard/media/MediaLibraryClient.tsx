@@ -100,7 +100,7 @@ export default function MediaLibraryClient() {
         return <ImageIcon className="w-8 h-8" />
       case 'VIDEO':
         return <Film className="w-8 h-8" />
-      case 'AUDIO':
+      case 'OTHER':
         return <Music className="w-8 h-8" />
       case 'DOCUMENT':
         return <FileText className="w-8 h-8" />
@@ -284,7 +284,7 @@ export default function MediaLibraryClient() {
                 <p className="text-xs text-muted-foreground">
                   {item.type === 'IMAGE' ? '图片' :
                    item.type === 'VIDEO' ? '视频' :
-                   item.type === 'AUDIO' ? '音频' : '文档'}
+                   item.type === 'OTHER' ? '其他' : '文档'}
                 </p>
               </div>
             ))}
@@ -315,7 +315,7 @@ export default function MediaLibraryClient() {
               <option value="all">所有类型</option>
               <option value="IMAGE">图片</option>
               <option value="VIDEO">视频</option>
-              <option value="AUDIO">音频</option>
+              <option value="OTHER">其他</option>
               <option value="DOCUMENT">文档</option>
             </select>
 
@@ -420,7 +420,7 @@ export default function MediaLibraryClient() {
                   {file.filename}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {formatFileSize(file.size)}
+                  {file.size ? formatFileSize(file.size) : '未知大小'}
                 </p>
               </div>
 
@@ -493,12 +493,12 @@ export default function MediaLibraryClient() {
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{file.filename}</p>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>{formatFileSize(file.size)}</span>
+                  <span>{file.size ? formatFileSize(file.size) : '未知大小'}</span>
                   {file.width && file.height && (
                     <span>{file.width} × {file.height}</span>
                   )}
                   <span>{new Date(file.createdAt).toLocaleDateString('zh-CN')}</span>
-                  <span>上传者: {file.uploadedBy.name}</span>
+                  <span>上传者: {file.uploader.name}</span>
                 </div>
               </div>
 
