@@ -199,18 +199,27 @@ export default function TagManagementClient({ initialTags, stats }: Props) {
   }
 
   return (
-    <>
-      <button
-        onClick={() => setShowNewTagForm(true)}
-        className="fixed bottom-8 right-8 inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors shadow-lg"
-      >
-        <Plus className="w-4 h-4" />
-        <span>新建标签</span>
-      </button>
+    <div className="container mx-auto max-w-7xl p-6 lg:p-8 space-y-8">
+      {/* 页面标题和操作按钮 */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">标签管理</h1>
+          <p className="text-muted-foreground mt-1">
+            共有 {stats.totalTags} 个标签
+          </p>
+        </div>
+        <button
+          onClick={() => setShowNewTagForm(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          <span>新建标签</span>
+        </button>
+      </div>
 
       {/* 错误提示 */}
       {error && (
-        <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-lg mb-4">
+        <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-lg">
           {error}
         </div>
       )}
@@ -564,6 +573,6 @@ export default function TagManagementClient({ initialTags, stats }: Props) {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   )
 }

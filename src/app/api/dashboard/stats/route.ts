@@ -30,25 +30,25 @@ export async function GET(request: NextRequest) {
     switch (type) {
       case 'overview':
         const stats = await getOverallStats()
-        return NextResponse.json(stats)
+        return NextResponse.json({ data: stats })
         
       case 'activity':
         const timeRange = searchParams.get('timeRange') as 'week' | 'month' | 'year' || 'week'
         const activityData = await getActivityData(timeRange)
-        return NextResponse.json(activityData)
+        return NextResponse.json({ data: activityData })
         
       case 'popular':
         const limit = parseInt(searchParams.get('limit') || '5')
         const popularPosts = await getPopularPosts(limit)
-        return NextResponse.json(popularPosts)
+        return NextResponse.json({ data: popularPosts })
         
       case 'devices':
         const deviceStats = await getDeviceStats()
-        return NextResponse.json(deviceStats)
+        return NextResponse.json({ data: deviceStats })
         
       case 'browsers':
         const browserStats = await getBrowserStats()
-        return NextResponse.json(browserStats)
+        return NextResponse.json({ data: browserStats })
         
       default:
         return NextResponse.json({ error: '无效的统计类型' }, { status: 400 })

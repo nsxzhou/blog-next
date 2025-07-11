@@ -6,13 +6,9 @@ import {
   TrendingUp,
   TrendingDown,
   Eye,
-  FileText,
   Users,
   Clock,
   Calendar,
-  BarChart3,
-  LineChart,
-  PieChart,
   Activity,
   ArrowUp,
   ArrowDown,
@@ -36,12 +32,6 @@ interface AnalyticsData {
     bounceRate: number
     bounceRateChange: number
   }
-  popularArticles: Array<{
-    id: string
-    title: string
-    views: number
-    readTime: string
-  }>
   viewsData: {
     [key in TimeRange]: Array<{
       date: string
@@ -49,15 +39,6 @@ interface AnalyticsData {
       visitors: number
     }>
   }
-  trafficSources: Array<{
-    source: string
-    value: number
-    color: string
-  }>
-  devices: Array<{
-    device: string
-    value: number
-  }>
 }
 
 export default function AnalyticsPage() {
@@ -75,40 +56,20 @@ export default function AnalyticsPage() {
     try {
       setLoading(true)
       
-      // 并行获取所有需要的数据
-      const [overviewRes, activityRes, popularRes, devicesRes] = await Promise.all([
+      // 并行获取需要的数据
+      const [overviewRes, activityRes] = await Promise.all([
         fetch('/api/dashboard/stats?type=overview'),
-        fetch(`/api/dashboard/stats?type=activity&timeRange=${timeRange}`),
-        fetch('/api/dashboard/stats?type=popular&limit=5'),
-        fetch('/api/dashboard/stats?type=devices')
+        fetch(`/api/dashboard/stats?type=activity&timeRange=${timeRange}`)
       ])
 
-      if (overviewRes.ok && activityRes.ok && popularRes.ok && devicesRes.ok) {
-        const [overview, activity, popular, devices] = await Promise.all([
+      if (overviewRes.ok && activityRes.ok) {
+        const [overview, activity] = await Promise.all([
           overviewRes.json(),
-          activityRes.json(),
-          popularRes.json(),
-          devicesRes.json()
+          activityRes.json()
         ])
 
-        // 处理设备数据
-        const deviceStats = devices.data || []
-        const totalDeviceViews = deviceStats.reduce((sum: number, d: any) => sum + d.views, 0)
-        const deviceData = deviceStats.map((d: any) => ({
-          device: d.device === 'desktop' ? '桌面端' : d.device === 'mobile' ? '移动端' : '平板',
-          value: totalDeviceViews > 0 ? Math.round((d.views / totalDeviceViews) * 100) : 0
-        }))
-
-        // 处理流量来源数据（暂时使用模拟数据，因为 API 没有提供）
-        const trafficSources = [
-          { source: '搜索引擎', value: 45, color: 'bg-blue-500' },
-          { source: '直接访问', value: 30, color: 'bg-green-500' },
-          { source: '社交媒体', value: 15, color: 'bg-purple-500' },
-          { source: '外部链接', value: 10, color: 'bg-amber-500' }
-        ]
-
         // 格式化活动数据
-        const formattedActivity = activity.data.map((item: any) => {
+        const formattedActivity = (activity.data || []).map((item: any) => {
           let date = item.date
           if (timeRange === 'week') {
             const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
@@ -121,43 +82,33 @@ export default function AnalyticsPage() {
           }
           return {
             date,
-            views: item.views,
-            visitors: item.uniqueVisitors
+            views: item.views || 0,
+            visitors: item.visitors || Math.round((item.views || 0) * 0.7) // 如果没有访客数据，估算为浏览量的70%
           }
         })
 
-        // 格式化热门文章
-        const formattedPopular = popular.data.map((post: any) => ({
-          id: post.id,
-          title: post.title,
-          views: post.viewCount,
-          readTime: `${Math.ceil(post.avgReadTime / 60)}:${String(post.avgReadTime % 60).padStart(2, '0')}`
-        }))
-
         // 计算平均阅读时长
-        const avgReadTimeMinutes = Math.floor((overview.data.avgReadTime || 0) / 60)
-        const avgReadTimeSeconds = Math.round((overview.data.avgReadTime || 0) % 60)
+        const overviewData = overview?.data || {}
+        const avgReadTimeMinutes = Math.floor((overviewData.avgReadTime || 0) / 60)
+        const avgReadTimeSeconds = Math.round((overviewData.avgReadTime || 0) % 60)
         const avgReadTime = `${avgReadTimeMinutes}:${String(avgReadTimeSeconds).padStart(2, '0')}`
 
         setAnalyticsData({
           overview: {
-            totalViews: overview.data.totalViews || 0,
-            totalViewsChange: overview.data.viewsChange || 0,
-            uniqueVisitors: overview.data.uniqueVisitors || 0,
-            uniqueVisitorsChange: overview.data.visitorsChange || 0,
+            totalViews: overviewData.totalViews || 0,
+            totalViewsChange: overviewData.viewsChange || 0,
+            uniqueVisitors: overviewData.uniqueVisitors || 0,
+            uniqueVisitorsChange: overviewData.visitorsChange || 0,
             avgReadTime,
-            avgReadTimeChange: overview.data.avgReadTimeChange || 0,
-            bounceRate: overview.data.bounceRate || 0,
-            bounceRateChange: overview.data.bounceRateChange || 0
+            avgReadTimeChange: overviewData.avgReadTimeChange || 0,
+            bounceRate: overviewData.bounceRate || 0,
+            bounceRateChange: overviewData.bounceRateChange || 0
           },
-          popularArticles: formattedPopular,
           viewsData: {
             week: timeRange === 'week' ? formattedActivity : [],
             month: timeRange === 'month' ? formattedActivity : [],
             year: timeRange === 'year' ? formattedActivity : []
-          },
-          trafficSources,
-          devices: deviceData
+          }
         })
       }
     } catch (error) {
@@ -419,27 +370,32 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* 图表 */}
-        <div className="h-64 relative">
+        {/* 改进的图表显示 */}
+        <div className="h-64">
           {currentViewsData.length > 0 ? (
-            <div className="absolute inset-0 flex items-end justify-between gap-2">
+            <div className="h-full flex items-end justify-between gap-1">
               {currentViewsData.map((data, index) => (
-                <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="w-full flex gap-1 items-end h-48">
+                <div key={index} className="flex-1 flex flex-col items-center">
+                  <div className="w-full flex gap-0.5 items-end h-48">
                     <motion.div
                       initial={{ height: 0 }}
-                      animate={{ height: `${(data.views / maxViews) * 100}%` }}
-                      transition={{ delay: index * 0.1, duration: 0.5 }}
-                      className="flex-1 bg-primary rounded-t"
+                      animate={{ height: `${Math.max((data.views / maxViews) * 100, 2)}%` }}
+                      transition={{ delay: index * 0.05, duration: 0.5 }}
+                      className="flex-1 bg-primary rounded-t min-h-[2px]"
                     />
                     <motion.div
                       initial={{ height: 0 }}
-                      animate={{ height: `${(data.visitors / maxVisitors) * 100}%` }}
-                      transition={{ delay: index * 0.1 + 0.05, duration: 0.5 }}
-                      className="flex-1 bg-primary/50 rounded-t"
+                      animate={{ height: `${Math.max((data.visitors / maxVisitors) * 100, 2)}%` }}
+                      transition={{ delay: index * 0.05 + 0.025, duration: 0.5 }}
+                      className="flex-1 bg-primary/50 rounded-t min-h-[2px]"
                     />
                   </div>
-                  <span className="text-xs text-muted-foreground">{data.date}</span>
+                  <div className="mt-2 text-xs text-muted-foreground text-center">
+                    <div>{data.date}</div>
+                    <div className="text-[10px]">
+                      {data.views} / {data.visitors}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -450,86 +406,6 @@ export default function AnalyticsPage() {
           )}
         </div>
       </motion.div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* 热门文章 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="lg:col-span-2 bg-card border border-border rounded-xl p-6"
-        >
-          <h2 className="text-lg font-semibold mb-4">热门文章</h2>
-          <div className="space-y-3">
-            {analyticsData.popularArticles.map((article, index) => (
-              <div
-                key={article.id}
-                className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/30 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-lg font-semibold text-muted-foreground">
-                    #{index + 1}
-                  </span>
-                  <div>
-                    <p className="font-medium">{article.title}</p>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Eye className="w-3 h-3" />
-                        {article.views.toLocaleString()}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {article.readTime}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* 流量来源 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-card border border-border rounded-xl p-6"
-        >
-          <h2 className="text-lg font-semibold mb-4">流量来源</h2>
-          <div className="space-y-3">
-            {analyticsData.trafficSources.map((source) => (
-              <div key={source.source}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm">{source.source}</span>
-                  <span className="text-sm font-medium">{source.value}%</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${source.value}%` }}
-                    transition={{ duration: 0.5 }}
-                    className={cn("h-full rounded-full", source.color)}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 pt-6 border-t border-border">
-            <h3 className="font-medium mb-3">设备分布</h3>
-            <div className="space-y-2">
-              {analyticsData.devices.map((device) => (
-                <div key={device.device} className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">{device.device}</span>
-                  <span className="text-sm font-medium">{device.value}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-      </div>
     </div>
   )
 }

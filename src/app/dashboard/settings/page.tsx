@@ -1,6 +1,7 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
+import PersonalSettingsClient from './PersonalSettingsClient'
 
 export default async function SettingsPage() {
   const session = await getServerSession(authOptions)
@@ -9,17 +10,16 @@ export default async function SettingsPage() {
     redirect('/auth/signin')
   }
   
-  // TODO: 实现个人资料设置页面
   return (
-    <div className="p-6 lg:p-8 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-2">个人资料</h1>
-        <p className="text-muted-foreground">管理您的个人信息和账号设置</p>
+    <div className="container mx-auto max-w-5xl p-6 lg:p-8 space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold">个人设置</h1>
+        <p className="text-muted-foreground mt-1">
+          管理您的个人资料、账号安全和偏好设置
+        </p>
       </div>
       
-      <div className="bg-card border border-border rounded-xl p-6">
-        <p className="text-muted-foreground">个人资料设置功能正在开发中...</p>
-      </div>
+      <PersonalSettingsClient />
     </div>
   )
 }
