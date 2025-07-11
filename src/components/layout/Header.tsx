@@ -113,19 +113,6 @@ export default function Header() {
 
             {/* Right Actions */}
             <div className="flex items-center space-x-3">
-              {/* Search Button */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={cn(
-                  'p-2 rounded-md transition-colors',
-                  'hover:bg-accent/50',
-                  'text-muted-foreground hover:text-foreground'
-                )}
-                aria-label="搜索"
-              >
-                <Search className="h-4 w-4" />
-              </motion.button>
               {/* Theme Toggle */}
               <ThemeToggle />
 
