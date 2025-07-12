@@ -16,6 +16,20 @@ import {
   RefreshCw
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  LineChart,
+  Line
+} from 'recharts'
 
 // 时间范围类型
 type TimeRange = 'week' | 'month' | 'year'
@@ -39,6 +53,23 @@ interface AnalyticsData {
       visitors: number
     }>
   }
+}
+
+// 自定义工具提示
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+        <p className="text-sm font-medium">{label}</p>
+        {payload.map((entry: any, index: number) => (
+          <p key={index} className="text-sm" style={{ color: entry.color }}>
+            {entry.name}: {entry.value.toLocaleString()}
+          </p>
+        ))}
+      </div>
+    )
+  }
+  return null
 }
 
 export default function AnalyticsPage() {
@@ -68,8 +99,11 @@ export default function AnalyticsPage() {
           activityRes.json()
         ])
 
+        // 确保活动数据是数组
+        const activityData = Array.isArray(activity?.data) ? activity.data : []
+
         // 格式化活动数据
-        const formattedActivity = (activity.data || []).map((item: any) => {
+        const formattedActivity = activityData.map((item: any) => {
           let date = item.date
           if (timeRange === 'week') {
             const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
@@ -113,17 +147,31 @@ export default function AnalyticsPage() {
       }
     } catch (error) {
       console.error('Failed to fetch analytics data:', error)
+      // 设置默认空数据以避免报错
+      setAnalyticsData({
+        overview: {
+          totalViews: 0,
+          totalViewsChange: 0,
+          uniqueVisitors: 0,
+          uniqueVisitorsChange: 0,
+          avgReadTime: '0:00',
+          avgReadTimeChange: 0,
+          bounceRate: 0,
+          bounceRateChange: 0
+        },
+        viewsData: {
+          week: [],
+          month: [],
+          year: []
+        }
+      })
     } finally {
       setLoading(false)
     }
   }
 
-  // 获取当前时间范围的数据
+  // 获取当前时间范围的数据，确保总是返回数组
   const currentViewsData = analyticsData?.viewsData[timeRange] || []
-
-  // 计算最大值（用于图表缩放）
-  const maxViews = Math.max(...currentViewsData.map(d => d.views), 1)
-  const maxVisitors = Math.max(...currentViewsData.map(d => d.visitors), 1)
 
   // 刷新数据
   const handleRefresh = () => {
@@ -131,6 +179,12 @@ export default function AnalyticsPage() {
     fetchAnalyticsData().finally(() => {
       setTimeout(() => setIsRefreshing(false), 500)
     })
+  }
+
+  // 导出报告功能（示例）
+  const handleExport = () => {
+    // 这里可以实现导出功能
+    console.log('导出报告功能待实现')
   }
 
   if (loading || !analyticsData) {
@@ -167,7 +221,10 @@ export default function AnalyticsPage() {
             <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
             <span>刷新</span>
           </button>
-          <button className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+          <button 
+            onClick={handleExport}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+          >
             <Download className="w-4 h-4" />
             <span>导出报告</span>
           </button>
@@ -205,18 +262,18 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <div className="h-12 w-20">
-              {/* 迷你图表 */}
-              <svg className="w-full h-full" viewBox="0 0 80 48">
-                <polyline
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  points="0,30 20,20 40,25 60,10 80,15"
-                  className="text-primary"
-                />
-              </svg>
+              {/* 迷你趋势图 */}
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={currentViewsData.slice(-7)}>
+                  <Line 
+                    type="monotone" 
+                    dataKey="views" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </motion.div>
@@ -251,17 +308,17 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <div className="h-12 w-20">
-              <svg className="w-full h-full" viewBox="0 0 80 48">
-                <polyline
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  points="0,25 20,15 40,20 60,12 80,18"
-                  className="text-primary"
-                />
-              </svg>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={currentViewsData.slice(-7)}>
+                  <Line 
+                    type="monotone" 
+                    dataKey="visitors" 
+                    stroke="hsl(var(--chart-2))" 
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </motion.div>
@@ -331,7 +388,7 @@ export default function AnalyticsPage() {
         </motion.div>
       </div>
 
-      {/* 访问趋势 */}
+      {/* 访问趋势 - 使用 Recharts */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -358,47 +415,55 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* 图例 */}
-        <div className="flex items-center gap-6 text-sm mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-primary rounded" />
-            <span className="text-muted-foreground">浏览量</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-primary/50 rounded" />
-            <span className="text-muted-foreground">访客数</span>
-          </div>
-        </div>
-
-        {/* 改进的图表显示 */}
-        <div className="h-64">
+        {/* 使用 Recharts 面积图 */}
+        <div className="h-[400px]">
           {currentViewsData.length > 0 ? (
-            <div className="h-full flex items-end justify-between gap-1">
-              {currentViewsData.map((data, index) => (
-                <div key={index} className="flex-1 flex flex-col items-center">
-                  <div className="w-full flex gap-0.5 items-end h-48">
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: `${Math.max((data.views / maxViews) * 100, 2)}%` }}
-                      transition={{ delay: index * 0.05, duration: 0.5 }}
-                      className="flex-1 bg-primary rounded-t min-h-[2px]"
-                    />
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: `${Math.max((data.visitors / maxVisitors) * 100, 2)}%` }}
-                      transition={{ delay: index * 0.05 + 0.025, duration: 0.5 }}
-                      className="flex-1 bg-primary/50 rounded-t min-h-[2px]"
-                    />
-                  </div>
-                  <div className="mt-2 text-xs text-muted-foreground text-center">
-                    <div>{data.date}</div>
-                    <div className="text-[10px]">
-                      {data.views} / {data.visitors}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={currentViewsData}>
+                <defs>
+                  <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorVisitors" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
+                  dataKey="date" 
+                  className="text-xs"
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <YAxis 
+                  className="text-xs"
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '20px' }}
+                  iconType="line"
+                  formatter={(value) => value === 'views' ? '浏览量' : '访客数'}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="views"
+                  stroke="hsl(var(--primary))"
+                  fillOpacity={1}
+                  fill="url(#colorViews)"
+                  strokeWidth={2}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="visitors"
+                  stroke="hsl(var(--chart-2))"
+                  fillOpacity={1}
+                  fill="url(#colorVisitors)"
+                  strokeWidth={2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           ) : (
             <div className="h-full flex items-center justify-center">
               <p className="text-muted-foreground text-sm">暂无数据</p>
@@ -406,6 +471,74 @@ export default function AnalyticsPage() {
           )}
         </div>
       </motion.div>
+
+      {/* 设备分布和页面浏览排名 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 设备分布 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-card border border-border rounded-xl p-6"
+        >
+          <h2 className="text-lg font-semibold mb-4">设备分布</h2>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={[
+                  { name: '桌面端', value: 65, fill: 'hsl(var(--chart-1))' },
+                  { name: '移动端', value: 30, fill: 'hsl(var(--chart-2))' },
+                  { name: '平板', value: 5, fill: 'hsl(var(--chart-3))' }
+                ]}
+                layout="vertical"
+              >
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis type="number" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="value" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+
+        {/* 热门页面 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-card border border-border rounded-xl p-6"
+        >
+          <h2 className="text-lg font-semibold mb-4">热门页面</h2>
+          <div className="space-y-3">
+            {[
+              { page: '/blog/getting-started', views: 1234, change: 12 },
+              { page: '/blog/advanced-tips', views: 987, change: -5 },
+              { page: '/about', views: 765, change: 8 },
+              { page: '/projects', views: 543, change: 15 },
+              { page: '/blog/tutorial', views: 432, change: -2 }
+            ].map((item, index) => (
+              <div key={index} className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium truncate">{item.page}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-muted-foreground">
+                      {item.views.toLocaleString()} 浏览
+                    </span>
+                    <span className={cn(
+                      "text-xs flex items-center gap-0.5",
+                      item.change > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                    )}>
+                      {item.change > 0 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                      {Math.abs(item.change)}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
     </div>
   )
 }

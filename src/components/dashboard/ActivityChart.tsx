@@ -18,12 +18,18 @@ interface ActivityChartProps {
 }
 
 export default function ActivityChart({ data, timeRange, className }: ActivityChartProps) {
+  // 确保 data 是一个有效的数组
+  const validData = Array.isArray(data) ? data : []
+  
   // 计算最大值用于缩放
   const maxValues = useMemo(() => {
-    const maxViews = Math.max(...data.map(d => d.views))
-    const maxArticles = Math.max(...data.map(d => d.articles))
+    if (validData.length === 0) {
+      return { maxViews: 100, maxArticles: 10 } // 默认值
+    }
+    const maxViews = Math.max(...validData.map(d => d.views || 0), 1)
+    const maxArticles = Math.max(...validData.map(d => d.articles || 0), 1)
     return { maxViews, maxArticles }
-  }, [data])
+  }, [validData])
   
   // 格式化日期
   const formatDate = (dateString: string) => {
@@ -55,6 +61,11 @@ export default function ActivityChart({ data, timeRange, className }: ActivityCh
       </div>
       
       {/* 图表区域 */}
+      {validData.length === 0 ? (
+        <div className="relative h-48 flex items-center justify-center">
+          <p className="text-muted-foreground text-sm">暂无数据</p>
+        </div>
+      ) : (
       <div className="relative h-48">
         {/* Y轴刻度 */}
         <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-xs text-muted-foreground">
@@ -65,7 +76,7 @@ export default function ActivityChart({ data, timeRange, className }: ActivityCh
         
         {/* 图表主体 */}
         <div className="ml-8 h-full flex items-end justify-between gap-2">
-          {data.map((point, index) => {
+          {validData.map((point, index) => {
             const viewsHeight = (point.views / maxValues.maxViews) * 100
             const articlesHeight = point.articles > 0 ? Math.max((point.articles / maxValues.maxArticles) * 100, 10) : 0
             
@@ -125,6 +136,7 @@ export default function ActivityChart({ data, timeRange, className }: ActivityCh
           })}
         </div>
       </div>
+      )}
       
       {/* 统计信息 */}
       <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50">
@@ -135,7 +147,7 @@ export default function ActivityChart({ data, timeRange, className }: ActivityCh
           <div>
             <p className="text-xs text-muted-foreground">总浏览量</p>
             <p className="text-sm font-medium">
-              {data.reduce((sum, d) => sum + d.views, 0).toLocaleString()}
+              {validData.reduce((sum, d) => sum + d.views, 0).toLocaleString()}
             </p>
           </div>
         </div>
@@ -146,7 +158,7 @@ export default function ActivityChart({ data, timeRange, className }: ActivityCh
           <div>
             <p className="text-xs text-muted-foreground">发布文章</p>
             <p className="text-sm font-medium">
-              {data.reduce((sum, d) => sum + d.articles, 0)} 篇
+              {validData.reduce((sum, d) => sum + d.articles, 0)} 篇
             </p>
           </div>
         </div>

@@ -54,8 +54,9 @@ export default function DashboardPage() {
           // 获取热门文章
           const popularRes = await fetch('/api/dashboard/stats?type=popular&limit=5')
           if (popularRes.ok) {
-            const data = await popularRes.json()
-            setPopularPosts(data)
+            const response = await popularRes.json()
+            // 确保设置的是数组
+            setPopularPosts(Array.isArray(response) ? response : (response.data || []))
           }
         } else {
           // 普通用户获取个人统计数据
@@ -304,14 +305,14 @@ export default function DashboardPage() {
                 查看全部
               </Link>
             </div>
-            <ArticleList articles={popularPosts.map(post => ({
+            <ArticleList articles={popularPosts.length > 0 ? popularPosts.map(post => ({
               id: post.id,
               title: post.title,
               views: post.views,
               date: post.publishedAt,
               status: 'published',
               trend: 0 // 暂时没有趋势数据
-            }))} />
+            })) : []} />
           </motion.div>
         </div>
 
