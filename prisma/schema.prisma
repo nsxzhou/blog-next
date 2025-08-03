@@ -13,3 +13,191 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+// 文章系统 - 博客文章数据模型
+model Post {
+  id          String   @id @default(cuid())    // 文章唯一标识符
+  title       String                           // 文章标题
+  slug        String   @unique                 // 文章URL友好标识符，用于SEO
+  content     String                           // 文章内容（Markdown格式）
+  excerpt     String?                          // 文章摘要，用于列表展示
+  searchContent String?                        // 搜索内容（纯文本，去除Markdown格式）
+  status      PostStatus @default(DRAFT)       // 文章状态：草稿、已发布、已归档
+  publishedAt DateTime?                       // 发布时间，null表示未发布
+  createdAt   DateTime @default(now())        // 创建时间
+  updatedAt   DateTime @updatedAt             // 更新时间
+  authorId    String                           // 作者ID，外键关联User表
+  featured    Boolean  @default(false)         // 是否为特色文章
+  viewCount   Int      @default(0)             // 浏览次数统计
+  readTime    Int?                             // 预估阅读时间（分钟）
+  
+  // 关系字段
+  author      User         @relation(fields: [authorId], references: [id])     // 文章作者（多对一）
+  tags        PostTag[]                                              // 文章标签（多对多关系）
+  media       ContentMedia[]                                         // 文章媒体文件（多对多关系）
+  
+  @@map("posts")
+}
+
+// 文章状态枚举
+enum PostStatus {
+  DRAFT      // 草稿 - 未发布状态
+  PUBLISHED  // 已发布 - 公开可见状态
+  ARCHIVED   // 已归档 - 不在常规列表中显示
+}
+
+// 页面系统 - 静态页面数据模型（如关于页面、联系页面等）
+model Page {
+  id          String   @id @default(cuid())    // 页面唯一标识符
+  title       String                           // 页面标题
+  slug        String   @unique                 // 页面URL友好标识符
+  content     String                           // 页面内容（Markdown格式）
+  excerpt     String?                          // 页面摘要
+  searchContent String?                        // 搜索内容（纯文本，去除Markdown格式）
+  status      PageStatus @default(DRAFT)       // 页面状态：草稿、已发布、已归档
+  publishedAt DateTime?                       // 发布时间
+  createdAt   DateTime @default(now())        // 创建时间
+  updatedAt   DateTime @updatedAt             // 更新时间
+  authorId    String                           // 作者ID，外键关联User表
+  order       Int      @default(0)             // 排序权重，数值越小越靠前
+  template    String?                          // 页面模板名称
+  featured    Boolean  @default(false)         // 是否为特色页面
+  
+  // 关系字段
+  author      User         @relation(fields: [authorId], references: [id])   // 页面作者（多对一）
+  media       ContentMedia[]                                         // 页面媒体文件（多对多关系）
+  
+  @@map("pages")
+}
+
+// 页面状态枚举
+enum PageStatus {
+  DRAFT      // 草稿 - 未发布状态
+  PUBLISHED  // 已发布 - 公开可见状态
+  ARCHIVED   // 已归档 - 不在导航中显示
+}
+
+
+// 标签系统 - 文章标签数据模型
+model Tag {
+  id          String @id @default(cuid())    // 标签唯一标识符
+  name        String @unique                 // 标签名称
+  slug        String @unique                 // 标签URL友好标识符
+  description String?                        // 标签描述
+  color       String?                        // 标签颜色（十六进制）
+  createdAt   DateTime @default(now())       // 创建时间
+  
+  // 关系字段
+  posts       PostTag[]                      // 标签关联的文章（多对多关系）
+  
+  @@map("tags")
+}
+
+// 文章-标签关联表 - 实现文章和标签的多对多关系
+model PostTag {
+  postId String                              // 文章ID，外键
+  tagId  String                              // 标签ID，外键
+  
+  // 关系字段
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)  // 关联文章
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)   // 关联标签
+  
+  @@id([postId, tagId])                      // 复合主键：文章ID + 标签ID
+  @@map("post_tags")
+}
+
+// 媒体管理 - 文件上传和管理数据模型
+model Media {
+  id          String   @id @default(cuid())    // 媒体文件唯一标识符
+  filename    String                           // 存储文件名（可能包含随机字符串）
+  originalName String                         // 原始文件名
+  path        String                           // 文件存储路径
+  url         String                           // 文件访问URL
+  mimeType    String                           // MIME类型（如image/jpeg）
+  size        Int                              // 文件大小（字节）
+  alt         String?                          // 图片alt文本（用于SEO和可访问性）
+  uploadedAt  DateTime @default(now())         // 上传时间
+  
+  // 关系字段
+  contents    ContentMedia[]                  // 关联的内容（多对多关系）
+  
+  @@map("media")
+}
+
+// 内容-媒体关联表 - 实现内容和媒体文件的多对多关系
+model ContentMedia {
+  id       String @id @default(cuid())         // 关联记录唯一标识符
+  postId   String?                            // 文章ID，外键（可为空）
+  pageId   String?                            // 页面ID，外键（可为空）
+  mediaId  String                             // 媒体ID，外键
+  order    Int    @default(0)                 // 显示顺序
+  
+  // 关系字段
+  post   Post?  @relation(fields: [postId], references: [id], onDelete: Cascade)  // 关联文章
+  page   Page?  @relation(fields: [pageId], references: [id], onDelete: Cascade)  // 关联页面
+  media  Media @relation(fields: [mediaId], references: [id], onDelete: Cascade)  // 关联媒体
+  
+  @@unique([postId, mediaId])                // 确保文章与媒体关联唯一
+  @@unique([pageId, mediaId])                // 确保页面与媒体关联唯一
+  @@map("content_media")
+}
+
+// 导航系统 - 网站导航菜单数据模型
+model Navigation {
+  id        String   @id @default(cuid())    // 导航项唯一标识符
+  name      String                           // 导航项显示名称
+  slug      String   @unique                 // 导航项URL友好标识符
+  url       String?                          // 外部链接URL（当type为EXTERNAL时使用）
+  type      NavigationType                   // 导航项类型
+  order     Int      @default(0)             // 排序权重，数值越小越靠前
+  parentId  String?                          // 父级导航项ID，null表示顶级导航
+  isActive  Boolean  @default(true)          // 是否激活显示
+  createdAt DateTime @default(now())         // 创建时间
+  updatedAt DateTime @updatedAt             // 更新时间
+  
+  // 关系字段（自引用关系实现多级导航）
+  parent    Navigation?  @relation("NavigationParent", fields: [parentId], references: [id])  // 父级导航
+  children  Navigation[] @relation("NavigationParent")                                          // 子级导航
+  
+  @@map("navigation")
+}
+
+// 导航类型枚举
+enum NavigationType {
+  PAGE       // 页面链接 - 关联Page表
+  TAG        // 标签链接 - 关联Tag表
+  EXTERNAL   // 外部链接 - 使用url字段
+}
+
+// 用户系统 - 博客用户和权限管理数据模型
+model User {
+  id            String   @id @default(cuid())    // 用户唯一标识符
+  username      String   @unique                 // 用户名（用于登录）
+  email         String   @unique                 // 邮箱地址（用于登录和通知）
+  password      String                           // 密码（加密存储）
+  name          String                           // 用户显示名称
+  role          UserRole @default(AUTHOR)        // 用户角色
+  status        UserStatus @default(ACTIVE)      // 用户状态
+  lastLoginAt   DateTime?                        // 最后登录时间
+  createdAt     DateTime @default(now())         // 创建时间
+  updatedAt     DateTime @updatedAt             // 更新时间
+  
+  // 关系字段
+  posts         Post[]                            // 用户发布的文章（一对多）
+  pages         Page[]                            // 用户创建的页面（一对多）
+  
+  @@map("users")
+}
+
+// 用户角色枚举
+enum UserRole {
+  ADMIN         // 管理员 - 拥有所有权限
+  AUTHOR        // 作者 - 可以创建和发布自己的内容
+}
+
+// 用户状态枚举
+enum UserStatus {
+  ACTIVE        // 活跃 - 可以正常使用系统
+  INACTIVE      // 非活跃 - 暂时禁用
+  BANNED        // 禁用 - 永久禁用
+}
