@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章编辑器 - Blog Next</title>
+    <style>
+        :root {
+            --background: #ffffff;
+            --foreground: #0a0a0a;
+            --card: #ffffff;
+            --card-foreground: #0a0a0a;
+            --primary: #0a0a0a;
+            --primary-foreground: #ffffff;
+            --secondary: #f5f5f5;
+            --secondary-foreground: #0a0a0a;
+            --muted: #f5f5f5;
+            --muted-foreground: #6b7280;
+            --accent: #f5f5f5;
+            --accent-foreground: #0a0a0a;
+            --border: #e5e7eb;
+            --input: #e5e7eb;
+            --ring: #0a0a0a;
+            --radius: 0.625rem;
+            --sidebar: #f5f5f5;
+            --sidebar-foreground: #0a0a0a;
+            --sidebar-primary: #0a0a0a;
+            --sidebar-primary-foreground: #ffffff;
+            --sidebar-accent: #ffffff;
+            --sidebar-accent-foreground: #0a0a0a;
+            --sidebar-border: #e5e7eb;
+        }
+
+        [data-theme="dark"] {
+            --background: #0a0a0a;
+            --foreground: #ffffff;
+            --card: #1a1a1a;
+            --card-foreground: #ffffff;
+            --primary: #ffffff;
+            --primary-foreground: #0a0a0a;
+            --secondary: #2a2a2a;
+            --secondary-foreground: #ffffff;
+            --muted: #2a2a2a;
+            --muted-foreground: #9ca3af;
+            --accent: #2a2a2a;
+            --accent-foreground: #ffffff;
+            --border: #374151;
+            --input: #374151;
+            --ring: #ffffff;
+            --sidebar: #1a1a1a;
+            --sidebar-foreground: #ffffff;
+            --sidebar-primary: #ffffff;
+            --sidebar-primary-foreground: #0a0a0a;
+            --sidebar-accent: #2a2a2a;
+            --sidebar-accent-foreground: #ffffff;
+            --sidebar-border: #374151;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .editor-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar);
+            border-right: 1px solid var(--sidebar-border);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--sidebar-border);
+        }
+
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--sidebar-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 1rem 0;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: var(--sidebar-foreground);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .sidebar-link:hover {
+            background-color: var(--sidebar-accent);
+            color: var(--sidebar-accent-foreground);
+        }
+
+        .sidebar-link.active {
+            background-color: var(--sidebar-primary);
+            color: var(--sidebar-primary-foreground);
+        }
+
+        .sidebar-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--foreground);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--foreground);
+            padding: 0.5rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--accent);
+        }
+
+        /* Editor Content */
+        .editor-content {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            gap: 2rem;
+            overflow: hidden;
+        }
+
+        .editor-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .editor-sidebar {
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--foreground);
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background-color: var(--background);
+            color: var(--foreground);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--ring);
+        }
+
+        .form-textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        /* Editor Toolbar */
+        .editor-toolbar {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.75rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-button {
+            background: none;
+            border: none;
+            color: var(--foreground);
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+        }
+
+        .toolbar-button:hover {
+            background-color: var(--accent);
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            background-color: var(--border);
+            margin: 0 0.25rem;
+        }
+
+        /* Editor Area */
+        .editor-area {
+            flex: 1;
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            min-height: 400px;
+        }
+
+        .editor-input {
+            width: 100%;
+            min-height: 350px;
+            border: none;
+            background: transparent;
+            color: var(--foreground);
+            font-family: inherit;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+
+        .editor-input:focus {
+            outline: none;
+        }
+
+        /* Sidebar Panels */
+        .panel {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+        }
+
+        .panel-header {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--foreground);
+        }
+
+        /* Tags Input */
+        .tags-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background-color: var(--background);
+            min-height: 44px;
+        }
+
+        .tag-item {
+            background-color: var(--secondary);
+            color: var(--foreground);
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tag-remove {
+            background: none;
+            border: none;
+            color: var(--muted-foreground);
+            cursor: pointer;
+            font-size: 0.75rem;
+            padding: 0;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .tag-remove:hover {
+            background-color: var(--accent);
+            color: var(--foreground);
+        }
+
+        .tag-input {
+            background: none;
+            border: none;
+            outline: none;
+            flex: 1;
+            min-width: 100px;
+            color: var(--foreground);
+            font-family: inherit;
+            font-size: 0.875rem;
+        }
+
+        /* Feature Image */
+        .featured-image-container {
+            position: relative;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            background-color: var(--secondary);
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .featured-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .featured-image-placeholder {
+            color: var(--muted-foreground);
+            text-align: center;
+        }
+
+        .image-upload-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .image-upload-button:hover {
+            background-color: var(--accent);
+        }
+
+        /* Status and Actions */
+        .status-select {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-option {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background-color: var(--background);
+            color: var(--foreground);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .status-option:hover {
+            background-color: var(--accent);
+        }
+
+        .status-option.active {
+            background-color: var(--primary);
+            color: var(--primary-foreground);
+            border-color: var(--primary);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--primary-foreground);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: var(--secondary-foreground);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--accent);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--foreground);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--accent);
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Save Status */
+        .save-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--muted-foreground);
+        }
+
+        .save-status.saved {
+            color: #10b981;
+        }
+
+        .save-status.saving {
+            color: #f59e0b;
+        }
+
+        /* Character Count */
+        .character-count {
+            font-size: 0.875rem;
+            color: var(--muted-foreground);
+            text-align: right;
+            margin-top: 0.5rem;
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--foreground);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .editor-sidebar {
+                width: 250px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                transform: translateX(-100%);
+                z-index: 1000;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .editor-content {
+                flex-direction: column;
+                padding: 1rem;
+            }
+
+            .editor-sidebar {
+                width: 100%;
+                order: -1;
+            }
+
+            .editor-toolbar {
+                justify-content: center;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Success Message */
+        .success-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #10b981;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="admin-dashboard.html" class="sidebar-logo">
+                    <span>📝</span>
+                    <span>Blog Next</span>
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="sidebar-menu">
+                    <li class="sidebar-item">
+                        <a href="admin-dashboard.html" class="sidebar-link">
+                            <span class="sidebar-icon">📊</span>
+                            <span>仪表板</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link active">
+                            <span class="sidebar-icon">📄</span>
+                            <span>文章管理</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link">
+                            <span class="sidebar-icon">📑</span>
+                            <span>页面管理</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link">
+                            <span class="sidebar-icon">🏷️</span>
+                            <span>标签管理</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="media-manager.html" class="sidebar-link">
+                            <span class="sidebar-icon">🖼️</span>
+                            <span>媒体管理</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link">
+                            <span class="sidebar-icon">⚙️</span>
+                            <span>系统设置</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-actions">
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1 class="header-title">文章编辑器</h1>
+                </div>
+                <div class="header-actions">
+                    <div class="save-status saved" id="saveStatus">
+                        <span>💾</span>
+                        <span>已保存</span>
+                    </div>
+                    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+                    <a href="admin-dashboard.html" class="btn btn-secondary">返回</a>
+                </div>
+            </header>
+
+            <!-- Editor Content -->
+            <div class="editor-content">
+                <!-- Main Editor Area -->
+                <div class="editor-main">
+                    <!-- Title Input -->
+                    <div class="form-group">
+                        <label class="form-label">文章标题</label>
+                        <input type="text" class="form-input" placeholder="输入文章标题..." value="Next.js 15 新特性详解">
+                    </div>
+
+                    <!-- Editor Toolbar -->
+                    <div class="editor-toolbar">
+                        <button class="toolbar-button" title="加粗">B</button>
+                        <button class="toolbar-button" title="斜体">I</button>
+                        <button class="toolbar-button" title="下划线">U</button>
+                        <div class="toolbar-separator"></div>
+                        <button class="toolbar-button" title="标题">H</button>
+                        <button class="toolbar-button" title="引用">"</button>
+                        <button class="toolbar-button" title="代码">&lt;/&gt;</button>
+                        <div class="toolbar-separator"></div>
+                        <button class="toolbar-button" title="无序列表">•</button>
+                        <button class="toolbar-button" title="有序列表">1.</button>
+                        <button class="toolbar-button" title="链接">🔗</button>
+                        <button class="toolbar-button" title="图片">🖼️</button>
+                        <div class="toolbar-separator"></div>
+                        <button class="toolbar-button" title="撤销">↶</button>
+                        <button class="toolbar-button" title="重做">↷</button>
+                    </div>
+
+                    <!-- Editor Area -->
+                    <div class="editor-area">
+                        <textarea class="editor-input" id="editorInput" placeholder="开始写作...">Next.js 15 带来了许多令人兴奋的新特性和改进，这些特性将进一步推动 React 应用的发展。本文将深入探讨这些新功能，并提供实际的使用示例。
+
+## 1. 改进的 App Router
+
+Next.js 15 对 App Router 进行了重大改进，提供了更直观的路由定义方式和更好的性能优化。
+
+## 2. 增强的服务器组件
+
+服务器组件现在支持更多的 React 特性，包括 Context 和 hooks 的有限支持。
+
+## 3. 改进的图像优化
+
+新的图像优化 API 提供了更好的性能和更多的自定义选项。
+
+## 4. 新的中间件 API
+
+Next.js 15 引入了更强大的中间件 API，允许开发者在请求处理的各个阶段进行拦截和修改。
+
+## 5. 性能优化
+
+Next.js 15 在性能方面进行了大量优化，包括更快的构建时间、改进的缓存机制、更好的开发体验和优化的包大小。</textarea>
+                        <div class="character-count">
+                            <span id="charCount">458</span> 字符
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Editor Sidebar -->
+                <div class="editor-sidebar">
+                    <!-- Publish Panel -->
+                    <div class="panel">
+                        <h3 class="panel-header">发布设置</h3>
+                        
+                        <div class="status-select">
+                            <div class="status-option active" onclick="setStatus('publish')">发布</div>
+                            <div class="status-option" onclick="setStatus('draft')">草稿</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">发布时间</label>
+                            <input type="datetime-local" class="form-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">文章摘要</label>
+                            <textarea class="form-textarea" placeholder="输入文章摘要..." rows="3">深入探讨 Next.js 15 的新功能，包括改进的性能、新的 API 和开发体验优化。</textarea>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn btn-primary" onclick="publishPost()">发布文章</button>
+                            <button class="btn btn-secondary" onclick="saveDraft()">保存草稿</button>
+                        </div>
+                    </div>
+
+                    <!-- Tags Panel -->
+                    <div class="panel">
+                        <h3 class="panel-header">标签</h3>
+                        <div class="tags-input-container" id="tagsContainer">
+                            <span class="tag-item">
+                                Next.js
+                                <button class="tag-remove" onclick="removeTag(this)">×</button>
+                            </span>
+                            <span class="tag-item">
+                                React
+                                <button class="tag-remove" onclick="removeTag(this)">×</button>
+                            </span>
+                            <span class="tag-item">
+                                前端开发
+                                <button class="tag-remove" onclick="removeTag(this)">×</button>
+                            </span>
+                            <input type="text" class="tag-input" placeholder="添加标签..." onkeypress="addTag(event)">
+                        </div>
+                    </div>
+
+                    <!-- Featured Image Panel -->
+                    <div class="panel">
+                        <h3 class="panel-header">特色图片</h3>
+                        <div class="featured-image-container">
+                            <img src="https://via.placeholder.com/300x200" alt="特色图片" class="featured-image">
+                            <button class="image-upload-button" onclick="uploadImage()">📤</button>
+                        </div>
+                    </div>
+
+                    <!-- SEO Panel -->
+                    <div class="panel">
+                        <h3 class="panel-header">SEO 设置</h3>
+                        <div class="form-group">
+                            <label class="form-label">SEO 标题</label>
+                            <input type="text" class="form-input" placeholder="SEO 标题..." value="Next.js 15 新特性详解 | Blog Next">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Meta 描述</label>
+                            <textarea class="form-textarea" placeholder="Meta 描述..." rows="2">深入探讨 Next.js 15 的新功能，包括改进的性能、新的 API 和开发体验优化。</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">关键词</label>
+                            <input type="text" class="form-input" placeholder="关键词，用逗号分隔..." value="Next.js, React, 前端开发, Web开发">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Theme Toggle
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Update theme toggle button
+            const themeToggle = document.querySelector('.theme-toggle');
+            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+
+        // Load saved theme
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.body.setAttribute('data-theme', savedTheme);
+            
+            const themeToggle = document.querySelector('.theme-toggle');
+            themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        });
+
+        // Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // Close sidebar when clicking outside
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            
+            if (!sidebar.contains(event.target) && !toggle.contains(event.target)) {
+                sidebar.classList.remove('open');
+            }
+        });
+
+        // Character Count
+        const editorInput = document.getElementById('editorInput');
+        const charCount = document.getElementById('charCount');
+
+        editorInput.addEventListener('input', function() {
+            const count = this.value.length;
+            charCount.textContent = count;
+            autoSave();
+        });
+
+        // Auto Save
+        let saveTimeout;
+        function autoSave() {
+            clearTimeout(saveTimeout);
+            const saveStatus = document.getElementById('saveStatus');
+            
+            saveStatus.className = 'save-status saving';
+            saveStatus.innerHTML = '<span class="loading"></span><span>保存中...</span>';
+            
+            saveTimeout = setTimeout(function() {
+                saveStatus.className = 'save-status saved';
+                saveStatus.innerHTML = '<span>💾</span><span>已保存</span>';
+            }, 1000);
+        }
+
+        // Status Selection
+        function setStatus(status) {
+            const options = document.querySelectorAll('.status-option');
+            options.forEach(option => {
+                option.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+        }
+
+        // Tag Management
+        function addTag(event) {
+            if (event.key === 'Enter') {
+                const input = event.target;
+                const tagText = input.value.trim();
+                
+                if (tagText) {
+                    const container = document.getElementById('tagsContainer');
+                    const tagElement = document.createElement('span');
+                    tagElement.className = 'tag-item';
+                    tagElement.innerHTML = `
+                        ${tagText}
+                        <button class="tag-remove" onclick="removeTag(this)">×</button>
+                    `;
+                    
+                    container.insertBefore(tagElement, input);
+                    input.value = '';
+                    autoSave();
+                }
+            }
+        }
+
+        function removeTag(button) {
+            button.parentElement.remove();
+            autoSave();
+        }
+
+        // Publish Post
+        function publishPost() {
+            showSuccessMessage('文章发布成功！');
+            setTimeout(() => {
+                window.location.href = 'admin-dashboard.html';
+            }, 1500);
+        }
+
+        // Save Draft
+        function saveDraft() {
+            showSuccessMessage('草稿保存成功！');
+            autoSave();
+        }
+
+        // Upload Image
+        function uploadImage() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    showSuccessMessage('图片上传成功！');
+                    autoSave();
+                }
+            };
+            input.click();
+        }
+
+        // Show Success Message
+        function showSuccessMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'success-message';
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+
+        // Toolbar Actions
+        document.querySelectorAll('.toolbar-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const title = this.getAttribute('title');
+                const editor = document.getElementById('editorInput');
+                
+                switch(title) {
+                    case '加粗':
+                        insertText(editor, '**', '**');
+                        break;
+                    case '斜体':
+                        insertText(editor, '*', '*');
+                        break;
+                    case '下划线':
+                        insertText(editor, '__', '__');
+                        break;
+                    case '标题':
+                        insertText(editor, '## ', '');
+                        break;
+                    case '引用':
+                        insertText(editor, '> ', '');
+                        break;
+                    case '代码':
+                        insertText(editor, '`', '`');
+                        break;
+                    case '无序列表':
+                        insertText(editor, '- ', '');
+                        break;
+                    case '有序列表':
+                        insertText(editor, '1. ', '');
+                        break;
+                    case '链接':
+                        insertText(editor, '[', '](url)');
+                        break;
+                    case '图片':
+                        insertText(editor, '![', '](url)');
+                        break;
+                }
+                
+                autoSave();
+            });
+        });
+
+        // Insert Text Helper
+        function insertText(editor, before, after) {
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const selectedText = editor.value.substring(start, end);
+            const replacement = before + selectedText + after;
+            
+            editor.value = editor.value.substring(0, start) + replacement + editor.value.substring(end);
+            editor.focus();
+            editor.setSelectionRange(start + before.length, start + before.length + selectedText.length);
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 's':
+                        e.preventDefault();
+                        autoSave();
+                        break;
+                    case 'b':
+                        e.preventDefault();
+                        document.querySelector('[title="加粗"]').click();
+                        break;
+                    case 'i':
+                        e.preventDefault();
+                        document.querySelector('[title="斜体"]').click();
+                        break;
+                    case 'u':
+                        e.preventDefault();
+                        document.querySelector('[title="下划线"]').click();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

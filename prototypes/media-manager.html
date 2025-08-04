@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>媒体管理 - Blog Next</title>
+    <style>
+        :root {
+            --background: #ffffff;
+            --foreground: #0a0a0a;
+            --card: #ffffff;
+            --card-foreground: #0a0a0a;
+            --primary: #0a0a0a;
+            --primary-foreground: #ffffff;
+            --secondary: #f5f5f5;
+            --secondary-foreground: #0a0a0a;
+            --muted: #f5f5f5;
+            --muted-foreground: #6b7280;
+            --accent: #f5f5f5;
+            --accent-foreground: #0a0a0a;
+            --border: #e5e7eb;
+            --input: #e5e7eb;
+            --ring: #0a0a0a;
+            --radius: 0.625rem;
+            --sidebar: #f5f5f5;
+            --sidebar-foreground: #0a0a0a;
+            --sidebar-primary: #0a0a0a;
+            --sidebar-primary-foreground: #ffffff;
+            --sidebar-accent: #ffffff;
+            --sidebar-accent-foreground: #0a0a0a;
+            --sidebar-border: #e5e7eb;
+        }
+
+        [data-theme="dark"] {
+            --background: #0a0a0a;
+            --foreground: #ffffff;
+            --card: #1a1a1a;
+            --card-foreground: #ffffff;
+            --primary: #ffffff;
+            --primary-foreground: #0a0a0a;
+            --secondary: #2a2a2a;
+            --secondary-foreground: #ffffff;
+            --muted: #2a2a2a;
+            --muted-foreground: #9ca3af;
+            --accent: #2a2a2a;
+            --accent-foreground: #ffffff;
+            --border: #374151;
+            --input: #374151;
+            --ring: #ffffff;
+            --sidebar: #1a1a1a;
+            --sidebar-foreground: #ffffff;
+            --sidebar-primary: #ffffff;
+            --sidebar-primary-foreground: #0a0a0a;
+            --sidebar-accent: #2a2a2a;
+            --sidebar-accent-foreground: #ffffff;
+            --sidebar-border: #374151;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar);
+            border-right: 1px solid var(--sidebar-border);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--sidebar-border);
+        }
+
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--sidebar-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 1rem 0;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: var(--sidebar-foreground);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .sidebar-link:hover {
+            background-color: var(--sidebar-accent);
+            color: var(--sidebar-accent-foreground);
+        }
+
+        .sidebar-link.active {
+            background-color: var(--sidebar-primary);
+            color: var(--sidebar-primary-foreground);
+        }
+
+        .sidebar-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--foreground);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--foreground);
+            padding: 0.5rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--accent);
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 3rem;
+            background-color: var(--secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background-color: var(--accent);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background-color: var(--accent);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--muted-foreground);
+        }
+
+        .upload-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--foreground);
+        }
+
+        .upload-description {
+            color: var(--muted-foreground);
+            margin-bottom: 1rem;
+        }
+
+        .upload-button {
+            background-color: var(--primary);
+            color: var(--primary-foreground);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .upload-button:hover {
+            opacity: 0.9;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* Media Grid */
+        .media-section {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--foreground);
+        }
+
+        .section-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .search-input {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background-color: var(--background);
+            color: var(--foreground);
+            font-size: 0.875rem;
+            width: 200px;
+        }
+
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background-color: var(--background);
+            color: var(--foreground);
+            font-size: 0.875rem;
+        }
+
+        .view-toggle {
+            display: flex;
+            background-color: var(--secondary);
+            border-radius: var(--radius);
+            padding: 0.25rem;
+        }
+
+        .view-button {
+            background: none;
+            border: none;
+            color: var(--foreground);
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .view-button.active {
+            background-color: var(--background);
+            color: var(--primary);
+        }
+
+        /* Media Grid */
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .media-item {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: all 0.2s ease;
+            position: relative;
+            group: media-item;
+        }
+
+        .media-item:hover {
+            border-color: var(--primary);
+        }
+
+        .media-item.selected {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+
+        .media-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            background-color: var(--secondary);
+        }
+
+        .media-info {
+            padding: 1rem;
+        }
+
+        .media-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--foreground);
+            margin-bottom: 0.25rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .media-meta {
+            font-size: 0.75rem;
+            color: var(--muted-foreground);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .media-actions {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            display: flex;
+            gap: 0.25rem;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .media-item:hover .media-actions {
+            opacity: 1;
+        }
+
+        .media-action {
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            color: var(--foreground);
+            width: 32px;
+            height: 32px;
+            border-radius: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+        }
+
+        .media-action:hover {
+            background-color: var(--accent);
+        }
+
+        .media-checkbox {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+            width: 20px;
+            height: 20px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .media-item:hover .media-checkbox,
+        .media-item.selected .media-checkbox {
+            opacity: 1;
+        }
+
+        /* Media List View */
+        .media-list {
+            display: none;
+        }
+
+        .media-list.active {
+            display: block;
+        }
+
+        .media-list-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.2s ease;
+        }
+
+        .media-list-item:hover {
+            background-color: var(--accent);
+        }
+
+        .media-list-checkbox {
+            margin-right: 1rem;
+        }
+
+        .media-list-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: var(--radius);
+            margin-right: 1rem;
+        }
+
+        .media-list-info {
+            flex: 1;
+        }
+
+        .media-list-name {
+            font-weight: 500;
+            color: var(--foreground);
+            margin-bottom: 0.25rem;
+        }
+
+        .media-list-meta {
+            font-size: 0.875rem;
+            color: var(--muted-foreground);
+        }
+
+        .media-list-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Bulk Actions */
+        .bulk-actions {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .bulk-actions.active {
+            display: flex;
+        }
+
+        .bulk-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .bulk-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--primary-foreground);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: var(--secondary-foreground);
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--muted-foreground);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--muted-foreground);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--foreground);
+        }
+
+        .empty-description {
+            font-size: 0.875rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--card);
+            border-radius: var(--radius);
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--foreground);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--muted-foreground);
+        }
+
+        .modal-close:hover {
+            color: var(--foreground);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--foreground);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background-color: var(--background);
+            color: var(--foreground);
+            font-size: 1rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--ring);
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--foreground);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                transform: translateX(-100%);
+                z-index: 1000;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .media-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+
+            .section-actions {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: stretch;
+            }
+
+            .search-input {
+                width: 100%;
+            }
+
+            .bulk-actions {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .bulk-buttons {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="admin-dashboard.html" class="sidebar-logo">
+                    <span>📝</span>
+                    <span>Blog Next</span>
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="sidebar-menu">
+                    <li class="sidebar-item">
+                        <a href="admin-dashboard.html" class="sidebar-link">
+                            <span class="sidebar-icon">📊</span>
+                            <span>仪表板</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link">
+                            <span class="sidebar-icon">📄</span>
+                            <span>文章管理</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link">
+                            <span class="sidebar-icon">📑</span>
+                            <span>页面管理</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link">
+                            <span class="sidebar-icon">🏷️</span>
+                            <span>标签管理</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link active">
+                            <span class="sidebar-icon">🖼️</span>
+                            <span>媒体管理</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link">
+                            <span class="sidebar-icon">⚙️</span>
+                            <span>系统设置</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-actions">
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1 class="header-title">媒体管理</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+                    <a href="admin-dashboard.html" class="btn btn-secondary">返回</a>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="content">
+                <!-- Upload Section -->
+                <div class="upload-section">
+                    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                        <div class="upload-icon">📁</div>
+                        <h3 class="upload-title">上传文件</h3>
+                        <p class="upload-description">拖拽文件到此处或点击选择文件</p>
+                        <button class="upload-button">选择文件</button>
+                        <input type="file" id="fileInput" class="file-input" multiple accept="image/*,video/*,.pdf,.doc,.docx" onchange="handleFileSelect(event)">
+                    </div>
+                </div>
+
+                <!-- Bulk Actions -->
+                <div class="bulk-actions" id="bulkActions">
+                    <div class="bulk-info">
+                        <span>已选择 <span id="selectedCount">0</span> 个文件</span>
+                        <button class="btn btn-secondary" onclick="clearSelection()">清除选择</button>
+                    </div>
+                    <div class="bulk-buttons">
+                        <button class="btn btn-primary" onclick="downloadSelected()">下载</button>
+                        <button class="btn btn-secondary" onclick="moveSelected()">移动</button>
+                        <button class="btn btn-danger" onclick="deleteSelected()">删除</button>
+                    </div>
+                </div>
+
+                <!-- Media Section -->
+                <div class="media-section">
+                    <div class="section-header">
+                        <h2 class="section-title">媒体库</h2>
+                        <div class="section-actions">
+                            <input type="text" class="search-input" placeholder="搜索文件..." onkeyup="searchFiles(this.value)">
+                            <select class="filter-select" onchange="filterFiles(this.value)">
+                                <option value="all">全部类型</option>
+                                <option value="image">图片</option>
+                                <option value="video">视频</option>
+                                <option value="document">文档</option>
+                            </select>
+                            <div class="view-toggle">
+                                <button class="view-button active" onclick="setView('grid')" title="网格视图">⊞</button>
+                                <button class="view-button" onclick="setView('list')" title="列表视图">☰</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grid View -->
+                    <div class="media-grid" id="mediaGrid">
+                        <div class="media-item" data-type="image">
+                            <input type="checkbox" class="media-checkbox" onchange="toggleSelection(this)">
+                            <img src="https://via.placeholder.com/200x150" alt="媒体文件" class="media-image">
+                            <div class="media-actions">
+                                <button class="media-action" onclick="editMedia(this)" title="编辑">✏️</button>
+                                <button class="media-action" onclick="downloadMedia(this)" title="下载">⬇️</button>
+                                <button class="media-action" onclick="deleteMedia(this)" title="删除">🗑️</button>
+                            </div>
+                            <div class="media-info">
+                                <div class="media-name">blog-header.jpg</div>
+                                <div class="media-meta">
+                                    <span>2.3 MB</span>
+                                    <span>图片</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="media-item" data-type="image">
+                            <input type="checkbox" class="media-checkbox" onchange="toggleSelection(this)">
+                            <img src="https://via.placeholder.com/200x150" alt="媒体文件" class="media-image">
+                            <div class="media-actions">
+                                <button class="media-action" onclick="editMedia(this)" title="编辑">✏️</button>
+                                <button class="media-action" onclick="downloadMedia(this)" title="下载">⬇️</button>
+                                <button class="media-action" onclick="deleteMedia(this)" title="删除">🗑️</button>
+                            </div>
+                            <div class="media-info">
+                                <div class="media-name">nextjs-logo.png</div>
+                                <div class="media-meta">
+                                    <span>1.8 MB</span>
+                                    <span>图片</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="media-item" data-type="document">
+                            <input type="checkbox" class="media-checkbox" onchange="toggleSelection(this)">
+                            <div class="media-image" style="background: var(--secondary); display: flex; align-items: center; justify-content: center; font-size: 2rem;">📄</div>
+                            <div class="media-actions">
+                                <button class="media-action" onclick="editMedia(this)" title="编辑">✏️</button>
+                                <button class="media-action" onclick="downloadMedia(this)" title="下载">⬇️</button>
+                                <button class="media-action" onclick="deleteMedia(this)" title="删除">🗑️</button>
+                            </div>
+                            <div class="media-info">
+                                <div class="media-name">documentation.pdf</div>
+                                <div class="media-meta">
+                                    <span>5.2 MB</span>
+                                    <span>文档</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="media-item" data-type="image">
+                            <input type="checkbox" class="media-checkbox" onchange="toggleSelection(this)">
+                            <img src="https://via.placeholder.com/200x150" alt="媒体文件" class="media-image">
+                            <div class="media-actions">
+                                <button class="media-action" onclick="editMedia(this)" title="编辑">✏️</button>
+                                <button class="media-action" onclick="downloadMedia(this)" title="下载">⬇️</button>
+                                <button class="media-action" onclick="deleteMedia(this)" title="删除">🗑️</button>
+                            </div>
+                            <div class="media-info">
+                                <div class="media-name">team-photo.jpg</div>
+                                <div class="media-meta">
+                                    <span>3.1 MB</span>
+                                    <span>图片</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="media-item" data-type="video">
+                            <input type="checkbox" class="media-checkbox" onchange="toggleSelection(this)">
+                            <div class="media-image" style="background: var(--secondary); display: flex; align-items: center; justify-content: center; font-size: 2rem;">🎥</div>
+                            <div class="media-actions">
+                                <button class="media-action" onclick="editMedia(this)" title="编辑">✏️</button>
+                                <button class="media-action" onclick="downloadMedia(this)" title="下载">⬇️</button>
+                                <button class="media-action" onclick="deleteMedia(this)" title="删除">🗑️</button>
+                            </div>
+                            <div class="media-info">
+                                <div class="media-name">tutorial-video.mp4</div>
+                                <div class="media-meta">
+                                    <span>125 MB</span>
+                                    <span>视频</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="media-item" data-type="image">
+                            <input type="checkbox" class="media-checkbox" onchange="toggleSelection(this)">
+                            <img src="https://via.placeholder.com/200x150" alt="媒体文件" class="media-image">
+                            <div class="media-actions">
+                                <button class="media-action" onclick="editMedia(this)" title="编辑">✏️</button>
+                                <button class="media-action" onclick="downloadMedia(this)" title="下载">⬇️</button>
+                                <button class="media-action" onclick="deleteMedia(this)" title="删除">🗑️</button>
+                            </div>
+                            <div class="media-info">
+                                <div class="media-name">screenshot.png</div>
+                                <div class="media-meta">
+                                    <span>890 KB</span>
+                                    <span>图片</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- List View -->
+                    <div class="media-list" id="mediaList">
+                        <div class="media-list-item">
+                            <input type="checkbox" class="media-list-checkbox" onchange="toggleSelection(this)">
+                            <img src="https://via.placeholder.com/60x60" alt="媒体文件" class="media-list-image">
+                            <div class="media-list-info">
+                                <div class="media-list-name">blog-header.jpg</div>
+                                <div class="media-list-meta">2.3 MB • 图片 • 2024-01-15</div>
+                            </div>
+                            <div class="media-list-actions">
+                                <button class="btn btn-secondary" onclick="editMedia(this)">编辑</button>
+                                <button class="btn btn-secondary" onclick="downloadMedia(this)">下载</button>
+                                <button class="btn btn-danger" onclick="deleteMedia(this)">删除</button>
+                            </div>
+                        </div>
+
+                        <div class="media-list-item">
+                            <input type="checkbox" class="media-list-checkbox" onchange="toggleSelection(this)">
+                            <img src="https://via.placeholder.com/60x60" alt="媒体文件" class="media-list-image">
+                            <div class="media-list-info">
+                                <div class="media-list-name">nextjs-logo.png</div>
+                                <div class="media-list-meta">1.8 MB • 图片 • 2024-01-14</div>
+                            </div>
+                            <div class="media-list-actions">
+                                <button class="btn btn-secondary" onclick="editMedia(this)">编辑</button>
+                                <button class="btn btn-secondary" onclick="downloadMedia(this)">下载</button>
+                                <button class="btn btn-danger" onclick="deleteMedia(this)">删除</button>
+                            </div>
+                        </div>
+
+                        <div class="media-list-item">
+                            <input type="checkbox" class="media-list-checkbox" onchange="toggleSelection(this)">
+                            <div class="media-list-image" style="background: var(--secondary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">📄</div>
+                            <div class="media-list-info">
+                                <div class="media-list-name">documentation.pdf</div>
+                                <div class="media-list-meta">5.2 MB • 文档 • 2024-01-13</div>
+                            </div>
+                            <div class="media-list-actions">
+                                <button class="btn btn-secondary" onclick="editMedia(this)">编辑</button>
+                                <button class="btn btn-secondary" onclick="downloadMedia(this)">下载</button>
+                                <button class="btn btn-danger" onclick="deleteMedia(this)">删除</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">编辑文件信息</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form onsubmit="saveMediaInfo(event)">
+                <div class="form-group">
+                    <label class="form-label">文件名</label>
+                    <input type="text" class="form-input" id="fileName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">标题</label>
+                    <input type="text" class="form-input" id="fileTitle">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">描述</label>
+                    <input type="text" class="form-input" id="fileDescription">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">替代文本</label>
+                    <input type="text" class="form-input" id="fileAlt">
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Theme Toggle
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Update theme toggle button
+            const themeToggle = document.querySelector('.theme-toggle');
+            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+
+        // Load saved theme
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.body.setAttribute('data-theme', savedTheme);
+            
+            const themeToggle = document.querySelector('.theme-toggle');
+            themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        });
+
+        // Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // Close sidebar when clicking outside
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            
+            if (!sidebar.contains(event.target) && !toggle.contains(event.target)) {
+                sidebar.classList.remove('open');
+            }
+        });
+
+        // File Upload
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                // Simulate upload
+                showUploadProgress(files);
+            }
+        }
+
+        function showUploadProgress(files) {
+            const uploadArea = document.getElementById('uploadArea');
+            uploadArea.innerHTML = `
+                <div class="loading-spinner"></div>
+                <p>正在上传 ${files.length} 个文件...</p>
+            `;
+            
+            // Simulate upload completion
+            setTimeout(() => {
+                uploadArea.innerHTML = `
+                    <div class="upload-icon">✅</div>
+                    <h3 class="upload-title">上传完成</h3>
+                    <p class="upload-description">成功上传 ${files.length} 个文件</p>
+                    <button class="upload-button" onclick="resetUploadArea()">继续上传</button>
+                `;
+            }, 2000);
+        }
+
+        function resetUploadArea() {
+            const uploadArea = document.getElementById('uploadArea');
+            uploadArea.innerHTML = `
+                <div class="upload-icon">📁</div>
+                <h3 class="upload-title">上传文件</h3>
+                <p class="upload-description">拖拽文件到此处或点击选择文件</p>
+                <button class="upload-button">选择文件</button>
+            `;
+        }
+
+        // Drag and Drop
+        const uploadArea = document.getElementById('uploadArea');
+        
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                showUploadProgress(files);
+            }
+        });
+
+        // View Toggle
+        function setView(view) {
+            const grid = document.getElementById('mediaGrid');
+            const list = document.getElementById('mediaList');
+            const buttons = document.querySelectorAll('.view-button');
+            
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            if (view === 'grid') {
+                grid.style.display = 'grid';
+                list.style.display = 'none';
+                buttons[0].classList.add('active');
+            } else {
+                grid.style.display = 'none';
+                list.style.display = 'block';
+                list.classList.add('active');
+                buttons[1].classList.add('active');
+            }
+        }
+
+        // Selection Management
+        function toggleSelection(checkbox) {
+            const item = checkbox.closest('.media-item, .media-list-item');
+            if (checkbox.checked) {
+                item.classList.add('selected');
+            } else {
+                item.classList.remove('selected');
+            }
+            updateBulkActions();
+        }
+
+        function updateBulkActions() {
+            const selected = document.querySelectorAll('.media-item.selected, .media-list-item.selected');
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            if (selected.length > 0) {
+                bulkActions.classList.add('active');
+                selectedCount.textContent = selected.length;
+            } else {
+                bulkActions.classList.remove('active');
+            }
+        }
+
+        function clearSelection() {
+            const checkboxes = document.querySelectorAll('.media-checkbox, .media-list-checkbox');
+            const items = document.querySelectorAll('.media-item, .media-list-item');
+            
+            checkboxes.forEach(cb => cb.checked = false);
+            items.forEach(item => item.classList.remove('selected'));
+            
+            updateBulkActions();
+        }
+
+        // Media Actions
+        function editMedia(button) {
+            const item = button.closest('.media-item, .media-list-item');
+            const fileName = item.querySelector('.media-name, .media-list-name').textContent;
+            
+            document.getElementById('fileName').value = fileName;
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function downloadMedia(button) {
+            const item = button.closest('.media-item, .media-list-item');
+            const fileName = item.querySelector('.media-name, .media-list-name').textContent;
+            
+            // Simulate download
+            const link = document.createElement('a');
+            link.href = '#';
+            link.download = fileName;
+            link.click();
+            
+            showSuccessMessage(`开始下载 ${fileName}`);
+        }
+
+        function deleteMedia(button) {
+            const item = button.closest('.media-item, .media-list-item');
+            const fileName = item.querySelector('.media-name, .media-list-name').textContent;
+            
+            if (confirm(`确定要删除 ${fileName} 吗？`)) {
+                item.remove();
+                showSuccessMessage(`已删除 ${fileName}`);
+            }
+        }
+
+        // Bulk Actions
+        function downloadSelected() {
+            const selected = document.querySelectorAll('.media-item.selected, .media-list-item.selected');
+            selected.forEach(item => {
+                const fileName = item.querySelector('.media-name, .media-list-name').textContent;
+                // Simulate download
+                const link = document.createElement('a');
+                link.href = '#';
+                link.download = fileName;
+                link.click();
+            });
+            
+            showSuccessMessage(`开始下载 ${selected.length} 个文件`);
+            clearSelection();
+        }
+
+        function moveSelected() {
+            const selected = document.querySelectorAll('.media-item.selected, .media-list-item.selected');
+            showSuccessMessage(`移动了 ${selected.length} 个文件`);
+            clearSelection();
+        }
+
+        function deleteSelected() {
+            const selected = document.querySelectorAll('.media-item.selected, .media-list-item.selected');
+            
+            if (confirm(`确定要删除选中的 ${selected.length} 个文件吗？`)) {
+                selected.forEach(item => item.remove());
+                showSuccessMessage(`已删除 ${selected.length} 个文件`);
+                clearSelection();
+            }
+        }
+
+        // Search and Filter
+        function searchFiles(query) {
+            const items = document.querySelectorAll('.media-item, .media-list-item');
+            const lowerQuery = query.toLowerCase();
+            
+            items.forEach(item => {
+                const name = item.querySelector('.media-name, .media-list-name').textContent.toLowerCase();
+                if (name.includes(lowerQuery)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function filterFiles(type) {
+            const items = document.querySelectorAll('.media-item, .media-list-item');
+            
+            items.forEach(item => {
+                if (type === 'all' || item.dataset.type === type) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Modal Management
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function saveMediaInfo(event) {
+            event.preventDefault();
+            showSuccessMessage('文件信息已保存');
+            closeModal();
+        }
+
+        // Success Message
+        function showSuccessMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background-color: #10b981;
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 0.5rem;
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+            if (e.ctrlKey && e.key === 'a') {
+                e.preventDefault();
+                const checkboxes = document.querySelectorAll('.media-checkbox, .media-list-checkbox');
+                checkboxes.forEach(cb => {
+                    cb.checked = true;
+                    toggleSelection(cb);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

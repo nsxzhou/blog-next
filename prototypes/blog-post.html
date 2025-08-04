@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Next.js 15 新特性详解 - Blog Next</title>
+    <style>
+        :root {
+            --background: #ffffff;
+            --foreground: #0a0a0a;
+            --card: #ffffff;
+            --card-foreground: #0a0a0a;
+            --primary: #0a0a0a;
+            --primary-foreground: #ffffff;
+            --secondary: #f5f5f5;
+            --secondary-foreground: #0a0a0a;
+            --muted: #f5f5f5;
+            --muted-foreground: #6b7280;
+            --accent: #f5f5f5;
+            --accent-foreground: #0a0a0a;
+            --border: #e5e7eb;
+            --input: #e5e7eb;
+            --ring: #0a0a0a;
+            --radius: 0.625rem;
+        }
+
+        [data-theme="dark"] {
+            --background: #0a0a0a;
+            --foreground: #ffffff;
+            --card: #1a1a1a;
+            --card-foreground: #ffffff;
+            --primary: #ffffff;
+            --primary-foreground: #0a0a0a;
+            --secondary: #2a2a2a;
+            --secondary-foreground: #ffffff;
+            --muted: #2a2a2a;
+            --muted-foreground: #9ca3af;
+            --accent: #2a2a2a;
+            --accent-foreground: #ffffff;
+            --border: #374151;
+            --input: #374151;
+            --ring: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* Header Styles */
+        .header {
+            background-color: var(--card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--foreground);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--foreground);
+            padding: 0.5rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--accent);
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .breadcrumb-list {
+            display: flex;
+            list-style: none;
+            gap: 0.5rem;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+
+        .breadcrumb-item {
+            color: var(--muted-foreground);
+        }
+
+        .breadcrumb-link {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .breadcrumb-link:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb-separator {
+            color: var(--muted-foreground);
+        }
+
+        /* Article Header */
+        .article-header {
+            padding: 3rem 0;
+            text-align: center;
+        }
+
+        .article-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+            color: var(--foreground);
+        }
+
+        .article-meta {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--muted-foreground);
+        }
+
+        .article-author {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .author-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--secondary);
+        }
+
+        .article-tags {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background-color: var(--secondary);
+            color: var(--foreground);
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .tag:hover {
+            background-color: var(--accent);
+        }
+
+        /* Featured Image */
+        .featured-image {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            margin: 2rem 0;
+            border-radius: var(--radius);
+            background-color: var(--secondary);
+        }
+
+        /* Article Content */
+        .article-content {
+            padding: 2rem 0;
+        }
+
+        .article-body {
+            font-size: 1.125rem;
+            line-height: 1.8;
+            color: var(--foreground);
+        }
+
+        .article-body h2 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin: 2rem 0 1rem;
+            color: var(--foreground);
+        }
+
+        .article-body h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 1.5rem 0 0.75rem;
+            color: var(--foreground);
+        }
+
+        .article-body p {
+            margin-bottom: 1.5rem;
+        }
+
+        .article-body ul, .article-body ol {
+            margin: 1.5rem 0;
+            padding-left: 2rem;
+        }
+
+        .article-body li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-body blockquote {
+            border-left: 4px solid var(--primary);
+            padding-left: 1rem;
+            margin: 2rem 0;
+            color: var(--muted-foreground);
+            font-style: italic;
+        }
+
+        .article-body code {
+            background-color: var(--secondary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+        }
+
+        .article-body pre {
+            background-color: var(--secondary);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            overflow-x: auto;
+            margin: 2rem 0;
+        }
+
+        .article-body pre code {
+            background: none;
+            padding: 0;
+        }
+
+        /* Article Footer */
+        .article-footer {
+            padding: 3rem 0;
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+
+        .share-section {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .share-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--foreground);
+        }
+
+        .share-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .share-button {
+            background-color: var(--secondary);
+            color: var(--foreground);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            font-size: 0.875rem;
+        }
+
+        .share-button:hover {
+            background-color: var(--accent);
+        }
+
+        /* Related Posts */
+        .related-posts {
+            margin-top: 3rem;
+        }
+
+        .related-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--foreground);
+        }
+
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .related-card {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .related-card:hover {
+            border-color: var(--primary);
+        }
+
+        .related-card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--foreground);
+        }
+
+        .related-card-excerpt {
+            color: var(--muted-foreground);
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        /* Comments Section */
+        .comments-section {
+            margin-top: 3rem;
+            padding-top: 3rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .comments-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--foreground);
+        }
+
+        .comment-form {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--foreground);
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background-color: var(--background);
+            color: var(--foreground);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--ring);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--primary-foreground);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: var(--card);
+            border-top: 1px solid var(--border);
+            padding: 2rem 0;
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        /* Reading Progress */
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background-color: var(--primary);
+            z-index: 1000;
+            transition: width 0.1s ease;
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--foreground);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .article-title {
+                font-size: 2rem;
+            }
+
+            .article-meta {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .featured-image {
+                height: 250px;
+            }
+
+            .related-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .share-buttons {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Reading Progress Bar -->
+    <div class="reading-progress" id="readingProgress"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Blog Next</a>
+                <nav>
+                    <ul class="nav-menu">
+                        <li><a href="index.html" class="nav-link">首页</a></li>
+                        <li><a href="#" class="nav-link">文章</a></li>
+                        <li><a href="#" class="nav-link">标签</a></li>
+                        <li><a href="#" class="nav-link">关于</a></li>
+                        <li><a href="search-results.html" class="nav-link">搜索</a></li>
+                        <li><button class="theme-toggle" onclick="toggleTheme()">🌙</button></li>
+                        <li><a href="admin-dashboard.html" class="nav-link">管理</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-toggle">☰</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <div class="container">
+            <ul class="breadcrumb-list">
+                <li class="breadcrumb-item"><a href="index.html" class="breadcrumb-link">首页</a></li>
+                <li class="breadcrumb-separator">›</li>
+                <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">文章</a></li>
+                <li class="breadcrumb-separator">›</li>
+                <li class="breadcrumb-item">Next.js 15 新特性详解</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Article Header -->
+    <article class="article-header">
+        <div class="container">
+            <h1 class="article-title">Next.js 15 新特性详解</h1>
+            <div class="article-meta">
+                <div class="article-author">
+                    <img src="https://via.placeholder.com/32x32" alt="作者头像" class="author-avatar">
+                    <span>张三</span>
+                </div>
+                <div>2024年1月15日</div>
+                <div>阅读时间：8分钟</div>
+                <div>1,234 次阅读</div>
+            </div>
+            <div class="article-tags">
+                <a href="#" class="tag">Next.js</a>
+                <a href="#" class="tag">React</a>
+                <a href="#" class="tag">前端开发</a>
+                <a href="#" class="tag">Web开发</a>
+            </div>
+        </div>
+    </article>
+
+    <!-- Featured Image -->
+    <div class="container">
+        <img src="https://via.placeholder.com/800x400" alt="Next.js 15" class="featured-image">
+    </div>
+
+    <!-- Article Content -->
+    <article class="article-content">
+        <div class="container">
+            <div class="article-body">
+                <p>Next.js 15 带来了许多令人兴奋的新特性和改进，这些特性将进一步推动 React 应用的发展。本文将深入探讨这些新功能，并提供实际的使用示例。</p>
+
+                <h2>1. 改进的 App Router</h2>
+                <p>Next.js 15 对 App Router 进行了重大改进，提供了更直观的路由定义方式和更好的性能优化。</p>
+
+                <pre><code>// 新的路由定义方式
+export default function Page() {
+  return &lt;h1&gt;Hello World&lt;/h1&gt;
+}</code></pre>
+
+                <h2>2. 增强的服务器组件</h2>
+                <p>服务器组件现在支持更多的 React 特性，包括 Context 和 hooks 的有限支持。</p>
+
+                <blockquote>
+                    "服务器组件是 Next.js 的未来，它们提供了更好的性能和更简单的数据获取方式。" - Next.js 团队
+                </blockquote>
+
+                <h2>3. 改进的图像优化</h2>
+                <p>新的图像优化 API 提供了更好的性能和更多的自定义选项。</p>
+
+                <h3>主要改进点：</h3>
+                <ul>
+                    <li>更快的图像加载速度</li>
+                    <li>更好的响应式图像支持</li>
+                    <li>改进的 WebP 和 AVIF 格式支持</li>
+                    <li>新的图像优化配置选项</li>
+                </ul>
+
+                <h2>4. 新的中间件 API</h2>
+                <p>Next.js 15 引入了更强大的中间件 API，允许开发者在请求处理的各个阶段进行拦截和修改。</p>
+
+                <pre><code>// 新的中间件示例
+import { NextResponse } from 'next/server'
+
+export function middleware(request) {
+  return NextResponse.redirect(new URL('/home', request.url))
+}</code></pre>
+
+                <h2>5. 性能优化</h2>
+                <p>Next.js 15 在性能方面进行了大量优化，包括：</p>
+                <ol>
+                    <li>更快的构建时间</li>
+                    <li>改进的缓存机制</li>
+                    <li>更好的开发体验</li>
+                    <li>优化的包大小</li>
+                </ol>
+
+                <p>这些改进使得 Next.js 15 成为构建现代 Web 应用的理想选择。无论是个人项目还是企业级应用，Next.js 15 都能提供卓越的性能和开发体验。</p>
+            </div>
+        </div>
+    </article>
+
+    <!-- Article Footer -->
+    <footer class="article-footer">
+        <div class="container">
+            <!-- Share Section -->
+            <div class="share-section">
+                <h3 class="share-title">分享这篇文章</h3>
+                <div class="share-buttons">
+                    <button class="share-button">📧 邮件</button>
+                    <button class="share-button">🐦 Twitter</button>
+                    <button class="share-button">📘 Facebook</button>
+                    <button class="share-button">🔗 复制链接</button>
+                </div>
+            </div>
+
+            <!-- Related Posts -->
+            <div class="related-posts">
+                <h3 class="related-title">相关文章</h3>
+                <div class="related-grid">
+                    <div class="related-card">
+                        <h4 class="related-card-title">React 18 新特性详解</h4>
+                        <p class="related-card-excerpt">深入了解 React 18 带来的并发渲染、自动批处理等新特性...</p>
+                    </div>
+                    <div class="related-card">
+                        <h4 class="related-card-title">TypeScript 最佳实践</h4>
+                        <p class="related-card-excerpt">掌握 TypeScript 的高级特性和在实际项目中的应用技巧...</p>
+                    </div>
+                    <div class="related-card">
+                        <h4 class="related-card-title">现代前端开发工具链</h4>
+                        <p class="related-card-excerpt">探索 Vite、Webpack 等现代前端构建工具的使用方法...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="comments-section">
+                <h3 class="comments-title">评论 (3)</h3>
+                
+                <!-- Comment Form -->
+                <div class="comment-form">
+                    <form>
+                        <div class="form-group">
+                            <label class="form-label">姓名</label>
+                            <input type="text" class="form-input" placeholder="请输入您的姓名">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">邮箱</label>
+                            <input type="email" class="form-input" placeholder="请输入您的邮箱">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">评论</label>
+                            <textarea class="form-textarea" placeholder="请输入您的评论..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">发表评论</button>
+                    </form>
+                </div>
+
+                <!-- Comments List -->
+                <div class="comments-list">
+                    <div class="comment">
+                        <div class="comment-header">
+                            <img src="https://via.placeholder.com/40x40" alt="评论者头像" class="comment-avatar">
+                            <div class="comment-meta">
+                                <div class="comment-author">李四</div>
+                                <div class="comment-date">2024年1月16日</div>
+                            </div>
+                        </div>
+                        <div class="comment-body">
+                            <p>这篇文章写得很详细，对 Next.js 15 的新特性介绍得很清楚。期待更多这样的技术文章！</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Blog Next. 保留所有权利。</p>
+        </div>
+    </footer>
+
+    <script>
+        // Theme Toggle
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Update theme toggle button
+            const themeToggle = document.querySelector('.theme-toggle');
+            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+
+        // Load saved theme
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.body.setAttribute('data-theme', savedTheme);
+            
+            const themeToggle = document.querySelector('.theme-toggle');
+            themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        });
+
+        // Reading Progress
+        window.addEventListener('scroll', function() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const progress = (scrollTop / scrollHeight) * 100;
+            
+            document.getElementById('readingProgress').style.width = progress + '%';
+        });
+
+        // Mobile menu toggle
+        document.querySelector('.mobile-menu-toggle').addEventListener('click', function() {
+            const navMenu = document.querySelector('.nav-menu');
+            navMenu.style.display = navMenu.style.display === 'flex' ? 'none' : 'flex';
+        });
+
+        // Share functionality
+        document.querySelectorAll('.share-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const text = this.textContent;
+                if (text.includes('复制链接')) {
+                    navigator.clipboard.writeText(window.location.href);
+                    this.textContent = '✅ 已复制';
+                    setTimeout(() => {
+                        this.textContent = '🔗 复制链接';
+                    }, 2000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - Blog Next</title>
+    <style>
+        :root {
+            --background: #ffffff;
+            --foreground: #0a0a0a;
+            --card: #ffffff;
+            --card-foreground: #0a0a0a;
+            --primary: #0a0a0a;
+            --primary-foreground: #ffffff;
+            --secondary: #f5f5f5;
+            --secondary-foreground: #0a0a0a;
+            --muted: #f5f5f5;
+            --muted-foreground: #6b7280;
+            --accent: #f5f5f5;
+            --accent-foreground: #0a0a0a;
+            --border: #e5e7eb;
+            --input: #e5e7eb;
+            --ring: #0a0a0a;
+            --radius: 0.625rem;
+            --sidebar: #f5f5f5;
+            --sidebar-foreground: #0a0a0a;
+            --sidebar-primary: #0a0a0a;
+            --sidebar-primary-foreground: #ffffff;
+            --sidebar-accent: #ffffff;
+            --sidebar-accent-foreground: #0a0a0a;
+            --sidebar-border: #e5e7eb;
+        }
+
+        [data-theme="dark"] {
+            --background: #0a0a0a;
+            --foreground: #ffffff;
+            --card: #1a1a1a;
+            --card-foreground: #ffffff;
+            --primary: #ffffff;
+            --primary-foreground: #0a0a0a;
+            --secondary: #2a2a2a;
+            --secondary-foreground: #ffffff;
+            --muted: #2a2a2a;
+            --muted-foreground: #9ca3af;
+            --accent: #2a2a2a;
+            --accent-foreground: #ffffff;
+            --border: #374151;
+            --input: #374151;
+            --ring: #ffffff;
+            --sidebar: #1a1a1a;
+            --sidebar-foreground: #ffffff;
+            --sidebar-primary: #ffffff;
+            --sidebar-primary-foreground: #0a0a0a;
+            --sidebar-accent: #2a2a2a;
+            --sidebar-accent-foreground: #ffffff;
+            --sidebar-border: #374151;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar);
+            border-right: 1px solid var(--sidebar-border);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--sidebar-border);
+        }
+
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--sidebar-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 1rem 0;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: var(--sidebar-foreground);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .sidebar-link:hover {
+            background-color: var(--sidebar-accent);
+            color: var(--sidebar-accent-foreground);
+        }
+
+        .sidebar-link.active {
+            background-color: var(--sidebar-primary);
+            color: var(--sidebar-primary-foreground);
+        }
+
+        .sidebar-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid var(--sidebar-border);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--foreground);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--foreground);
+            padding: 0.5rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--accent);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--secondary);
+        }
+
+        .user-name {
+            font-weight: 500;
+            color: var(--foreground);
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--primary);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--muted-foreground);
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--secondary);
+            color: var(--foreground);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--foreground);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-change {
+            font-size: 0.875rem;
+            color: var(--muted-foreground);
+        }
+
+        .stat-change.positive {
+            color: #10b981;
+        }
+
+        .stat-change.negative {
+            color: #ef4444;
+        }
+
+        /* Recent Activity */
+        .section {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--foreground);
+        }
+
+        .section-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--primary-foreground);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: var(--secondary-foreground);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--accent);
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table th {
+            font-weight: 600;
+            color: var(--foreground);
+            background-color: var(--secondary);
+        }
+
+        .table td {
+            color: var(--foreground);
+        }
+
+        .table tbody tr:hover {
+            background-color: var(--accent);
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            color: var(--muted-foreground);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-icon:hover {
+            background-color: var(--secondary);
+            color: var(--foreground);
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-published {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-draft {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-pending {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .quick-action-card {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .quick-action-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .quick-action-icon {
+            width: 48px;
+            height: 48px;
+            background-color: var(--secondary);
+            color: var(--foreground);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+        }
+
+        .quick-action-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--foreground);
+            margin-bottom: 0.5rem;
+        }
+
+        .quick-action-description {
+            font-size: 0.875rem;
+            color: var(--muted-foreground);
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--foreground);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                transform: translateX(-100%);
+                z-index: 1000;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .table-container {
+                margin: 0 -1rem;
+            }
+
+            .table th,
+            .table td {
+                padding: 0.75rem 1rem;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--muted-foreground);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--foreground);
+        }
+
+        .empty-state-description {
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" class="sidebar-logo">
+                    <span>📝</span>
+                    <span>Blog Next</span>
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="sidebar-menu">
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link active">
+                            <span class="sidebar-icon">📊</span>
+                            <span>仪表板</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link">
+                            <span class="sidebar-icon">📄</span>
+                            <span>文章管理</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link">
+                            <span class="sidebar-icon">📑</span>
+                            <span>页面管理</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link">
+                            <span class="sidebar-icon">🏷️</span>
+                            <span>标签管理</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="media-manager.html" class="sidebar-link">
+                            <span class="sidebar-icon">🖼️</span>
+                            <span>媒体管理</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link">
+                            <span class="sidebar-icon">👥</span>
+                            <span>用户管理</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link">
+                            <span class="sidebar-icon">📈</span>
+                            <span>统计分析</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="settings.html" class="sidebar-link">
+                            <span class="sidebar-icon">⚙️</span>
+                            <span>系统设置</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <img src="https://via.placeholder.com/32x32" alt="用户头像" class="user-avatar">
+                    <span class="user-name">管理员</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-actions">
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1 class="header-title">仪表板</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+                    <a href="index.html" class="btn btn-secondary">返回首页</a>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="content">
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <div class="quick-action-card" onclick="window.location.href='post-editor.html'">
+                        <div class="quick-action-icon">✍️</div>
+                        <h3 class="quick-action-title">新建文章</h3>
+                        <p class="quick-action-description">创建新的博客文章</p>
+                    </div>
+                    <div class="quick-action-card">
+                        <div class="quick-action-icon">📑</div>
+                        <h3 class="quick-action-title">新建页面</h3>
+                        <p class="quick-action-description">创建静态页面</p>
+                    </div>
+                    <div class="quick-action-card" onclick="window.location.href='media-manager.html'">
+                        <div class="quick-action-icon">🖼️</div>
+                        <h3 class="quick-action-title">上传媒体</h3>
+                        <p class="quick-action-description">管理图片和文件</p>
+                    </div>
+                    <div class="quick-action-card">
+                        <div class="quick-action-icon">📊</div>
+                        <h3 class="quick-action-title">查看统计</h3>
+                        <p class="quick-action-description">分析网站数据</p>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3 class="stat-title">总文章数</h3>
+                            <div class="stat-icon">📄</div>
+                        </div>
+                        <div class="stat-value">128</div>
+                        <div class="stat-change positive">+12 本月</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3 class="stat-title">总访问量</h3>
+                            <div class="stat-icon">👁️</div>
+                        </div>
+                        <div class="stat-value">24.5K</div>
+                        <div class="stat-change positive">+18% 本月</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3 class="stat-title">评论数</h3>
+                            <div class="stat-icon">💬</div>
+                        </div>
+                        <div class="stat-value">1,234</div>
+                        <div class="stat-change positive">+25 本周</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3 class="stat-title">订阅用户</h3>
+                            <div class="stat-icon">📧</div>
+                        </div>
+                        <div class="stat-value">856</div>
+                        <div class="stat-change positive">+32 本月</div>
+                    </div>
+                </div>
+
+                <!-- Recent Posts -->
+                <div class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">最近文章</h2>
+                        <div class="section-actions">
+                            <a href="#" class="btn btn-secondary btn-sm">查看全部</a>
+                            <a href="post-editor.html" class="btn btn-primary btn-sm">新建文章</a>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>标题</th>
+                                    <th>作者</th>
+                                    <th>状态</th>
+                                    <th>发布时间</th>
+                                    <th>浏览量</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Next.js 15 新特性详解</td>
+                                    <td>张三</td>
+                                    <td><span class="status-badge status-published">已发布</span></td>
+                                    <td>2024-01-15</td>
+                                    <td>1,234</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="btn-icon" title="编辑">✏️</button>
+                                            <button class="btn-icon" title="查看">👁️</button>
+                                            <button class="btn-icon" title="删除">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>TypeScript 最佳实践指南</td>
+                                    <td>李四</td>
+                                    <td><span class="status-badge status-published">已发布</span></td>
+                                    <td>2024-01-12</td>
+                                    <td>856</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="btn-icon" title="编辑">✏️</button>
+                                            <button class="btn-icon" title="查看">👁️</button>
+                                            <button class="btn-icon" title="删除">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>React 性能优化技巧</td>
+                                    <td>王五</td>
+                                    <td><span class="status-badge status-draft">草稿</span></td>
+                                    <td>-</td>
+                                    <td>0</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="btn-icon" title="编辑">✏️</button>
+                                            <button class="btn-icon" title="发布">📤</button>
+                                            <button class="btn-icon" title="删除">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>现代前端开发工具链</td>
+                                    <td>赵六</td>
+                                    <td><span class="status-badge status-pending">待审核</span></td>
+                                    <td>-</td>
+                                    <td>0</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="btn-icon" title="编辑">✏️</button>
+                                            <button class="btn-icon" title="审核">✅</button>
+                                            <button class="btn-icon" title="删除">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">最近活动</h2>
+                    </div>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>用户</th>
+                                    <th>活动</th>
+                                    <th>详情</th>
+                                    <th>时间</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>张三</td>
+                                    <td>发布了文章</td>
+                                    <td>Next.js 15 新特性详解</td>
+                                    <td>2小时前</td>
+                                </tr>
+                                <tr>
+                                    <td>李四</td>
+                                    <td>评论了文章</td>
+                                    <td>在 "TypeScript 最佳实践指南" 中评论</td>
+                                    <td>4小时前</td>
+                                </tr>
+                                <tr>
+                                    <td>王五</td>
+                                    <td>创建了草稿</td>
+                                    <td>React 性能优化技巧</td>
+                                    <td>6小时前</td>
+                                </tr>
+                                <tr>
+                                    <td>赵六</td>
+                                    <td>提交了文章</td>
+                                    <td>现代前端开发工具链</td>
+                                    <td>8小时前</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Theme Toggle
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Update theme toggle button
+            const themeToggle = document.querySelector('.theme-toggle');
+            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+
+        // Load saved theme
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.body.setAttribute('data-theme', savedTheme);
+            
+            const themeToggle = document.querySelector('.theme-toggle');
+            themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        });
+
+        // Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // Close sidebar when clicking outside
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            
+            if (!sidebar.contains(event.target) && !toggle.contains(event.target)) {
+                sidebar.classList.remove('open');
+            }
+        });
+
+        // Simulate real-time updates
+        function updateStats() {
+            // Simulate random updates to stats
+            const statValues = document.querySelectorAll('.stat-value');
+            statValues.forEach(stat => {
+                const currentValue = parseInt(stat.textContent.replace(/[^\d]/g, ''));
+                const change = Math.floor(Math.random() * 10) - 5;
+                const newValue = Math.max(0, currentValue + change);
+                
+                if (stat.textContent.includes('K')) {
+                    stat.textContent = (newValue / 1000).toFixed(1) + 'K';
+                } else {
+                    stat.textContent = newValue.toLocaleString();
+                }
+            });
+        }
+
+        // Update stats every 30 seconds
+        setInterval(updateStats, 30000);
+
+        // Add interactive behavior to table actions
+        document.querySelectorAll('.btn-icon').forEach(button => {
+            button.addEventListener('click', function() {
+                const title = this.getAttribute('title');
+                const row = this.closest('tr');
+                const postTitle = row.querySelector('td').textContent;
+                
+                if (title === '删除') {
+                    if (confirm(`确定要删除文章 "${postTitle}" 吗？`)) {
+                        row.remove();
+                    }
+                } else if (title === '发布') {
+                    const statusCell = row.querySelector('.status-badge');
+                    statusCell.textContent = '已发布';
+                    statusCell.className = 'status-badge status-published';
+                } else if (title === '审核') {
+                    const statusCell = row.querySelector('.status-badge');
+                    statusCell.textContent = '已发布';
+                    statusCell.className = 'status-badge status-published';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
