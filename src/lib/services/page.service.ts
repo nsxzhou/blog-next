@@ -9,19 +9,15 @@ interface PageWhereInput {
   OR?: Array<{
     title?: {
       contains: string
-      mode: 'insensitive'
     }
     content?: {
       contains: string
-      mode: 'insensitive'
     }
     excerpt?: {
       contains: string
-      mode: 'insensitive'
     }
     searchContent?: {
       contains: string
-      mode: 'insensitive'
     }
   }>
 }
@@ -64,10 +60,10 @@ export class PageService {
 
     if (search) {
       where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { content: { contains: search, mode: 'insensitive' } },
-        { excerpt: { contains: search, mode: 'insensitive' } },
-        { searchContent: { contains: search, mode: 'insensitive' } }
+        { title: { contains: search } },
+        { content: { contains: search } },
+        { excerpt: { contains: search } },
+        { searchContent: { contains: search } }
       ]
     }
 

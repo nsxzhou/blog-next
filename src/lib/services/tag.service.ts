@@ -5,11 +5,9 @@ interface TagWhereInput {
   OR?: Array<{
     name?: {
       contains: string
-      mode: 'insensitive'
     }
     description?: {
       contains: string
-      mode: 'insensitive'
     }
   }>
 }
@@ -38,8 +36,8 @@ export class TagService {
 
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
+        { name: { contains: search } },
+        { description: { contains: search } }
       ]
     }
 

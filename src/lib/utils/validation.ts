@@ -28,9 +28,11 @@ export async function validateQueryParams<T>(
   schema: z.ZodSchema<T>,
   searchParams: URLSearchParams
 ): Promise<T> {
-  const params: Record<string, string> = {}
+  const params: Record<string, string | number> = {}
   searchParams.forEach((value, key) => {
-    params[key] = value
+    // 尝试转换为数字
+    const numValue = Number(value)
+    params[key] = isNaN(numValue) ? value : numValue
   })
   
   return await validateRequest(schema, params)
