@@ -1,6 +1,53 @@
 import prisma from '@/lib/db'
-import { PostStatus } from '@/generated/prisma'
 import { Post, PostListQuery, PostListResponse, CreatePostRequest, UpdatePostRequest } from '@/types/blog/post'
+import { PostStatus } from '@/generated/prisma'
+
+interface PostWhereInput {
+  status?: PostStatus
+  tags?: {
+    some: {
+      tagId: string
+    }
+  }
+  authorId?: string
+  featured?: boolean
+  OR?: Array<{
+    title?: {
+      contains: string
+      mode: 'insensitive'
+    }
+    content?: {
+      contains: string
+      mode: 'insensitive'
+    }
+    excerpt?: {
+      contains: string
+      mode: 'insensitive'
+    }
+    searchContent?: {
+      contains: string
+      mode: 'insensitive'
+    }
+  }>
+}
+
+interface PostOrderByInput {
+  [key: string]: 'asc' | 'desc'
+}
+
+interface PostUpdateData {
+  title?: string
+  content?: string
+  excerpt?: string
+  status?: PostStatus
+  featured?: boolean
+  searchContent?: string
+  tags?: {
+    create: Array<{
+      tagId: string
+    }>
+  }
+}
 
 export class PostService {
   static async getPostList(query: PostListQuery): Promise<PostListResponse> {
@@ -18,7 +65,7 @@ export class PostService {
 
     const skip = (page - 1) * pageSize
 
-    const where: any = {}
+    const where: PostWhereInput = {}
 
     if (status) {
       where.status = status
@@ -49,7 +96,7 @@ export class PostService {
       where.authorId = authorId
     }
 
-    const orderBy: any = {}
+    const orderBy: PostOrderByInput = {}
     orderBy[sortBy] = sortOrder
 
     const [posts, total] = await Promise.all([
@@ -279,7 +326,7 @@ export class PostService {
       throw new Error('文章不存在')
     }
 
-    const updateData: any = { ...postData }
+    const updateData: PostUpdateData = { ...postData }
 
     if (postData.content) {
       updateData.searchContent = this.extractTextFromMarkdown(postData.content)
