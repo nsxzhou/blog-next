@@ -2,14 +2,23 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useSession, signIn } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import ThemeToggle from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/forms/Button";
-import { Search, Settings } from "lucide-react";
+import { Search } from "lucide-react";
 import { SearchModal } from "@/components/blog/search/SearchModal";
 import { useUIStore } from "@/lib/stores";
+import { UserMenu } from "@/components/auth/UserMenu";
 
 export function Header() {
   const { isSearchOpen, setIsSearchOpen } = useUIStore();
+  const { data: session, status } = useSession();
+  const pathname = usePathname();
+  
+  const handleSignIn = () => {
+    signIn(undefined, { callbackUrl: pathname });
+  };
 
   // 处理键盘快捷键
   React.useEffect(() => {
@@ -63,13 +72,16 @@ export function Header() {
                 <span className="hidden sm:inline">搜索</span>
               </Button>
               
-              {/* 管理入口 */}
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/admin" className="flex items-center space-x-2">
-                  <Settings className="h-4 w-4" />
-                  <span className="hidden sm:inline">管理</span>
-                </Link>
-              </Button>
+              {/* 认证相关按钮 */}
+              {status === "loading" ? (
+                <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
+              ) : session ? (
+                <UserMenu />
+              ) : (
+                <Button variant="ghost" size="sm" onClick={handleSignIn}>
+                  登录
+                </Button>
+              )}
               
               {/* 主题切换 */}
               <ThemeToggle />
