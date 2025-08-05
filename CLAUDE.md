@@ -165,3 +165,69 @@ src/
 4. **类型安全**: 充分利用 TypeScript 的类型检查
 5. **代码生成**: Prisma 客户端生成到 `src/generated/prisma/` 目录
 6. **环境隔离**: 使用不同的环境文件进行开发和生产环境配置
+
+## 服务层架构详解
+
+### 核心服务类
+- **PostService**: 文章管理，支持复杂的查询、过滤、分页和全文搜索
+- **PageService**: 页面管理，支持模板系统和排序
+- **TagService**: 标签管理，支持多对多关系
+- **SearchService**: 全文搜索服务，整合多种内容类型的搜索
+
+### API 响应格式
+所有 API 返回统一的响应格式：
+```typescript
+// 成功响应
+{
+  success: true,
+  data: T,
+  message?: string
+}
+
+// 错误响应
+{
+  success: false,
+  error: string,
+  message?: string
+}
+```
+
+### 数据验证
+- 使用 Zod 进行请求参数和响应数据验证
+- 验证模式位于 `src/lib/validations/` 目录
+- 统一的验证错误处理
+
+### 状态管理
+使用 Zustand 进行客户端状态管理：
+- **searchStore**: 搜索功能状态，包括查询、过滤器、结果和建议
+- **uiStore**: UI 组件状态（如模态框、下拉菜单等）
+- **themeStore**: 主题切换状态（明暗模式）
+
+### 内容管理
+- 支持 Markdown 格式的文章和页面
+- 自动提取纯文本内容用于搜索
+- 媒体文件管理与内容关联
+- 支持特色内容和排序
+
+## 关键技术细节
+
+### Prisma 配置
+- 输出目录：`src/generated/prisma/`
+- 数据库：MySQL
+- 支持复杂的关系查询和事务
+
+### 路由结构
+- **(admin)**: 管理后台路由组，需要认证
+- **(blog)**: 博客前台路由组
+- **api/**: API 路由，遵循 RESTful 设计
+- **auth/**: 认证相关页面
+
+### 权限系统
+- 基于角色的访问控制（RBAC）
+- 支持 ADMIN 和 AUTHOR 角色
+- 使用 NextAuth.js 进行会话管理
+
+### 搜索功能
+- 支持文章、页面、标签的全文搜索
+- 搜索建议功能
+- 实时搜索结果过滤
