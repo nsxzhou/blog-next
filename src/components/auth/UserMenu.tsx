@@ -16,7 +16,7 @@ import { ToastHelper } from "@/lib/utils/toast";
 
 export function UserMenu() {
   const { data: session } = useSession();
-  
+
   if (!session?.user) {
     return null;
   }
@@ -65,10 +65,10 @@ export function UserMenu() {
             <span>个人资料</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem 
+        <DropdownMenuItem
           onClick={() => {
-            signOut({ callbackUrl: '/' });
             ToastHelper.success("已退出登录");
+            signOut({ callbackUrl: '/' });
           }}
           className="flex items-center"
         >

@@ -1,28 +1,67 @@
-import { withAuth } from "next-auth/middleware";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-export default withAuth(
-  function middleware(req) {
-    const token = req.nextauth.token; // 从请求中获取 NextAuth token
-    const isAdmin = token?.role === "ADMIN"; // 检查用户角色是否为管理员
+export default async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
 
-    if (req.nextUrl.pathname.startsWith("/admin") && !isAdmin) {
-      // 如果访问管理员路径但不是管理员
-      const url = new URL("/auth/signin", req.url); // 创建登录页 URL
-      url.searchParams.set("callbackUrl", req.url); // 设置回调 URL（当前页面）
-      return Response.redirect(url); // 重定向到登录页
-    }
-  },
-  {
-    callbacks: {
-      authorized: ({ token }) => !!token, // 仅当 token 存在时授权（用户已登录）
-    },
+  // 检查是否为认证页面
+  const isAuthPage = pathname === "/auth/signin" || pathname === "/auth/signup";
+
+  // 使用 NextAuth 的 getToken 方法进行更可靠的会话验证
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+    cookieName:
+      process.env.NODE_ENV === "production"
+        ? "__Secure-next-auth.session-token"
+        : "next-auth.session-token",
+  });
+
+  // 如果用户已登录但尝试访问认证页面，重定向到首页
+  if (token && isAuthPage) {
+    const url = new URL("/", req.url);
+    return NextResponse.redirect(url);
   }
-);
+
+  // 检查是否为管理员页面
+  if (pathname.startsWith("/admin")) {
+    // 如果没有 token，重定向到登录页面
+    if (!token) {
+      const url = new URL("/auth/signin", req.url);
+      url.searchParams.set("callbackUrl", req.url);
+      return NextResponse.redirect(url);
+    }
+
+    // 检查用户角色是否为管理员
+    if (token.role !== "ADMIN") {
+      const url = new URL("/", req.url);
+      url.searchParams.set("message", "您没有管理员权限");
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // 检查是否为受保护的 API 路由
+  if (pathname.startsWith("/api/posts") || pathname === "/api/auth/me") {
+    // 如果没有 token，返回 401 错误
+    if (!token) {
+      return new NextResponse(JSON.stringify({ error: "未授权访问" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
     "/admin/:path*", // 匹配所有 /admin 开头的路径
     "/api/posts/:path*", // 匹配所有 /api/posts 开头的路径
     "/api/auth/me", // 精确匹配 /api/auth/me 路径
+    "/auth/signin", // 精确匹配登录页面
+    "/auth/signup", // 精确匹配注册页面
+    "/((?!api|_next/static|_next/image|favicon.ico).*)", // 匹配所有其他路径（除了静态资源）
   ],
 };
