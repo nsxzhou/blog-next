@@ -48,13 +48,27 @@ export function UserMenu() {
           </div>
         </div>
         <DropdownMenuSeparator />
-        {(session.user.role === 'ADMIN' || session.user.role === 'AUTHOR') && (
+        {session.user.role === 'ADMIN' && (
           <>
             <DropdownMenuItem asChild>
               <Link href="/admin" className="flex items-center">
                 <Settings className="mr-2 h-4 w-4" />
                 <span>管理后台</span>
               </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+        {session.user.role === 'AUTHOR' && (
+          <>
+            <DropdownMenuItem 
+              onClick={() => {
+                ToastHelper.info("作者后台功能暂未开放");
+              }}
+              className="flex items-center"
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              <span>管理后台</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
           </>

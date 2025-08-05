@@ -5,9 +5,6 @@ import { getToken } from "next-auth/jwt";
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // 检查是否为认证页面
-  const isAuthPage = pathname === "/auth/signin" || pathname === "/auth/signup";
-
   // 使用 NextAuth 的 getToken 方法进行更可靠的会话验证
   const token = await getToken({
     req,
@@ -18,12 +15,6 @@ export default async function middleware(req: NextRequest) {
         : "next-auth.session-token",
   });
 
-  // 如果用户已登录但尝试访问认证页面，重定向到首页
-  if (token && isAuthPage) {
-    const url = new URL("/", req.url);
-    return NextResponse.redirect(url);
-  }
-
   // 检查是否为管理员页面
   if (pathname.startsWith("/admin")) {
     // 如果没有 token，重定向到登录页面
@@ -33,10 +24,10 @@ export default async function middleware(req: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // 检查用户角色是否为管理员
+    // 只允许 ADMIN 角色访问后台
     if (token.role !== "ADMIN") {
       const url = new URL("/", req.url);
-      url.searchParams.set("message", "您没有管理员权限");
+      url.searchParams.set("message", "作者后台功能暂未开放");
       return NextResponse.redirect(url);
     }
   }
