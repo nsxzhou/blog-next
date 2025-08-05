@@ -1,6 +1,7 @@
 "use client"
 
 import { useSession, signOut } from "next-auth/react"
+import Link from "next/link"
 import { Button } from "@/components/ui/forms/Button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -10,15 +11,36 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { LogOut } from "lucide-react"
+import { AdminBreadcrumb, useSidebar } from "@/components/admin/Sidebar"
+import { LogOut, Settings, User, Sun, Moon, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react"
 import { ToastHelper } from "@/lib/utils/toast"
+import { useTheme } from "next-themes"
+import { useEffect, useState } from "react"
 
 interface AdminHeaderProps {
   title?: string
+  breadcrumb?: Array<{
+    label: string
+    href?: string
+  }>
+  showBreadcrumb?: boolean
 }
 
-export function AdminHeader({ title }: AdminHeaderProps) {
+export function AdminHeader({
+  title,
+  breadcrumb,
+  showBreadcrumb = true
+}: AdminHeaderProps) {
   const { data: session } = useSession()
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  
+  // 获取侧边栏状态
+  const sidebar = useSidebar()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   if (!session?.user) {
     return null
@@ -34,17 +56,69 @@ export function AdminHeader({ title }: AdminHeaderProps) {
   }
 
   return (
-    <header className="border-b">
+    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center px-6">
-        <div className="flex-1">
-          <h1 className="text-xl font-semibold">{title || "管理后台"}</h1>
+        {/* 侧边栏展开/收起按钮 */}
+        <div className="flex items-center mr-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => sidebar?.setIsCollapsed(!sidebar?.isCollapsed)}
+            className="h-8 w-8"
+          >
+            {sidebar?.isCollapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+            <span className="sr-only">
+              {sidebar?.isCollapsed ? "展开侧边栏" : "收起侧边栏"}
+            </span>
+          </Button>
         </div>
         
-        <div className="flex items-center space-x-4">
-          <div className="text-sm text-muted-foreground">
-            欢迎, {session.user.name || session.user.username}
+        <div className="flex-1">
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col">
+              {showBreadcrumb && breadcrumb && (
+                <AdminBreadcrumb items={breadcrumb} />
+              )}
+              <h1 className="text-xl font-semibold">{title || "管理后台"}</h1>
+            </div>
           </div>
-          
+        </div>
+
+        <div className="flex items-center space-x-4">
+
+          {/* 返回首页按钮 */}
+          <Link href="/">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span className="sr-only">返回首页</span>
+            </Button>
+          </Link>
+
+          {/* 主题切换 */}
+          {mounted && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+            >
+              {theme === "light" ? (
+                <Moon className="h-4 w-4" />
+              ) : (
+                <Sun className="h-4 w-4" />
+              )}
+              <span className="sr-only">切换主题</span>
+            </Button>
+          )}
+
+          {/* 用户菜单 */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -69,6 +143,15 @@ export function AdminHeader({ title }: AdminHeaderProps) {
                   </p>
                 </div>
               </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="flex items-center">
+                <User className="mr-2 h-4 w-4" />
+                <span>个人资料</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex items-center">
+                <Settings className="mr-2 h-4 w-4" />
+                <span>账户设置</span>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleSignOut}

@@ -51,7 +51,7 @@ export function UserMenu() {
         {session.user.role === 'ADMIN' && (
           <>
             <DropdownMenuItem asChild>
-              <Link href="/admin" className="flex items-center">
+              <Link href="/admin" className="flex items-center w-full">
                 <Settings className="mr-2 h-4 w-4" />
                 <span>管理后台</span>
               </Link>
@@ -74,7 +74,7 @@ export function UserMenu() {
           </>
         )}
         <DropdownMenuItem asChild>
-          <Link href="/profile" className="flex items-center">
+          <Link href="/profile" className="flex items-center w-full">
             <User className="mr-2 h-4 w-4" />
             <span>个人资料</span>
           </Link>

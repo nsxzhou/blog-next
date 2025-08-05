@@ -20,14 +20,12 @@ export default async function middleware(req: NextRequest) {
     // 如果没有 token，重定向到登录页面
     if (!token) {
       const url = new URL("/auth/signin", req.url);
-      url.searchParams.set("callbackUrl", req.url);
       return NextResponse.redirect(url);
     }
 
     // 只允许 ADMIN 角色访问后台
     if (token.role !== "ADMIN") {
       const url = new URL("/", req.url);
-      url.searchParams.set("message", "作者后台功能暂未开放");
       return NextResponse.redirect(url);
     }
   }
