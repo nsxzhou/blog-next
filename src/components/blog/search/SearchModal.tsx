@@ -10,6 +10,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog/Dialog";
 import { SearchResult } from "@/types/blog/search";
+import { useSearchStore } from "@/lib/stores";
+import { useUIStore } from "@/lib/stores/uiStore";
 
 interface SearchModalProps {
   open: boolean;
@@ -17,12 +19,24 @@ interface SearchModalProps {
 }
 
 export function SearchModal({ open, onOpenChange }: SearchModalProps) {
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [activeFilter, setActiveFilter] = React.useState<'all' | 'post' | 'page' | 'tag'>('all');
-  const [searchResults, setSearchResults] = React.useState<SearchResult[]>([]);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [searchSuggestions, setSearchSuggestions] = React.useState<string[]>([]);
-  const [searchError, setSearchError] = React.useState<string | null>(null);
+  const {
+    searchQuery,
+    activeFilter,
+    searchResults,
+    isLoading,
+    searchSuggestions,
+    searchError,
+    setSearchQuery,
+    setActiveFilter,
+    setSearchError,
+    performSearch,
+    handleSuggestionClick,
+    handleResultClick,
+    loadSearchSuggestions
+  } = useSearchStore();
+  
+  const { setIsSearchOpen } = useUIStore();
+  
   const searchInputRef = React.useRef<HTMLInputElement>(null);
   const searchTimeoutRef = React.useRef<NodeJS.Timeout | undefined>(undefined);
 
@@ -35,70 +49,12 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
     }
   }, [open]);
 
-  // 执行搜索
-  const performSearch = React.useCallback(async () => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    setIsLoading(true);
-    setSearchError(null);
-    try {
-      const filterType = activeFilter === 'all' ? undefined : activeFilter;
-      const params = new URLSearchParams({
-        q: searchQuery,
-        limit: '20'
-      });
-      
-      if (filterType) {
-        params.append('type', filterType);
-      }
-      
-      const response = await fetch(`/api/search?${params.toString()}`);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '搜索失败');
-      }
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.message || '搜索失败');
-      }
-      setSearchResults(data.data.results);
-    } catch (error) {
-      console.error('搜索失败:', error);
-      setSearchError(error instanceof Error ? error.message : '搜索失败');
-      setSearchResults([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [searchQuery, activeFilter]);
-
-  // 加载搜索建议
-  const loadSearchSuggestions = async () => {
-    try {
-      const response = await fetch('/api/search/suggestions?limit=10');
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '获取搜索建议失败');
-      }
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.message || '获取搜索建议失败');
-      }
-      setSearchSuggestions(data.data.suggestions);
-    } catch (error) {
-      console.error('加载搜索建议失败:', error);
-      setSearchSuggestions([]);
-    }
-  };
-
   // 加载热门搜索建议
   React.useEffect(() => {
     if (open) {
       loadSearchSuggestions();
     }
-  }, [open]);
+  }, [open, loadSearchSuggestions]);
 
   // 实时搜索（防抖）
   React.useEffect(() => {
@@ -111,7 +67,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
         performSearch();
       }, 300);
     } else {
-      setSearchResults([]);
+      useSearchStore.getState().setSearchResults([]);
     }
 
     return () => {
@@ -121,16 +77,10 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
     };
   }, [searchQuery, activeFilter, performSearch]);
 
-  // 处理搜索建议点击
-  const handleSuggestionClick = (suggestion: string) => {
-    setSearchQuery(suggestion);
-    setActiveFilter('all');
-  };
-
   // 处理结果点击
-  const handleResultClick = (result: SearchResult) => {
-    // 导航到结果页面
-    window.location.href = result.url;
+  const handleResultClickWithClose = (result: SearchResult) => {
+    handleResultClick(result);
+    setIsSearchOpen(false);
     onOpenChange(false);
   };
 
@@ -255,7 +205,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
                     <div
                       key={result.id}
                       className="p-4 bg-card border border-border rounded-lg hover:bg-accent transition-colors cursor-pointer"
-                      onClick={() => handleResultClick(result)}
+                      onClick={() => handleResultClickWithClose(result)}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">

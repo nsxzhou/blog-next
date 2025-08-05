@@ -6,9 +6,10 @@ import ThemeToggle from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/forms/Button";
 import { Search, Settings } from "lucide-react";
 import { SearchModal } from "@/components/blog/search/SearchModal";
+import { useUIStore } from "@/lib/stores";
 
 export function Header() {
-  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+  const { isSearchOpen, setIsSearchOpen } = useUIStore();
 
   // 处理键盘快捷键
   React.useEffect(() => {
@@ -24,7 +25,7 @@ export function Header() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [setIsSearchOpen]);
 
   return (
     <>

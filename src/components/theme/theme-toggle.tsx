@@ -1,17 +1,18 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Sun, Moon } from "lucide-react";
+import { useThemeStore } from "@/lib/stores";
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const { mounted, setMounted } = useThemeStore();
 
   // 避免服务端渲染不匹配
   useEffect(() => {
     setMounted(true);
-  }, []);
+  }, [setMounted]);
 
   if (!mounted) {
     return (
