@@ -236,6 +236,72 @@ export class PostService {
     }
   }
 
+  static async getPostBySlug(slug: string): Promise<Post | null> {
+    const post = await prisma.post.findUnique({
+      where: { slug },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        tags: {
+          include: {
+            tag: true
+          }
+        },
+        media: {
+          include: {
+            media: true
+          }
+        }
+      }
+    })
+
+    if (!post) {
+      return null
+    }
+
+    return {
+      id: post.id,
+      title: post.title,
+      slug: post.slug,
+      content: post.content,
+      excerpt: post.excerpt || undefined,
+      searchContent: post.searchContent || undefined,
+      status: post.status,
+      publishedAt: post.publishedAt || undefined,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
+      authorId: post.authorId,
+      featured: post.featured,
+      viewCount: post.viewCount,
+      readTime: post.readTime || undefined,
+      author: post.author,
+      tags: post.tags.map(pt => ({
+        id: pt.tag.id,
+        name: pt.tag.name,
+        slug: pt.tag.slug,
+        description: pt.tag.description || undefined,
+        color: pt.tag.color || undefined,
+        createdAt: pt.tag.createdAt
+      })),
+      media: post.media.map(pm => ({
+        id: pm.media.id,
+        filename: pm.media.filename,
+        originalName: pm.media.originalName,
+        path: pm.media.path,
+        url: pm.media.url,
+        mimeType: pm.media.mimeType,
+        size: pm.media.size,
+        alt: pm.media.alt || undefined,
+        uploadedAt: pm.media.uploadedAt
+      }))
+    }
+  }
+
   static async createPost(data: CreatePostRequest & { authorId: string }): Promise<Post> {
     const { tagIds, ...postData } = data
 

@@ -3,88 +3,137 @@
 import { useSession } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/forms/Button"
-import { FileText, File, Tags, Image, Users, Eye, TrendingUp, Plus, ArrowRight } from "lucide-react"
+import { FileText, File, Tags, Image, Users, Eye, TrendingUp, Plus, ArrowRight, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { useEffect, useState } from "react"
+
+interface DashboardStats {
+  totalPosts: number
+  publishedPosts: number
+  draftPosts: number
+  archivedPosts: number
+  totalPages: number
+  publishedPages: number
+  draftPages: number
+  archivedPages: number
+  totalTags: number
+  totalMedia: number
+  totalUsers: number
+  activeUsers: number
+  totalViews: number
+  recentPosts: Array<{
+    id: string
+    title: string
+    publishedAt: string | null
+    viewCount: number
+    status: "DRAFT" | "PUBLISHED" | "ARCHIVED"
+  }>
+}
 
 export default function AdminDashboard() {
   const { data: session } = useSession()
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const stats = [
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/stats?type=dashboard')
+        if (!response.ok) {
+          throw new Error('获取统计数据失败')
+        }
+        const data = await response.json()
+        if (data.success) {
+          setStats(data.data)
+        } else {
+          throw new Error(data.message || '获取统计数据失败')
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '获取统计数据失败')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [])
+
+  const formatNumber = (num: number): string => {
+    return new Intl.NumberFormat('zh-CN').format(num)
+  }
+
+  const getStatusText = (status: string): string => {
+    switch (status) {
+      case 'PUBLISHED': return '已发布'
+      case 'DRAFT': return '草稿'
+      case 'ARCHIVED': return '已归档'
+      default: return status
+    }
+  }
+
+  const formatDate = (dateString: string | null): string => {
+    if (!dateString) return '未发布'
+    return new Date(dateString).toLocaleDateString('zh-CN')
+  }
+
+  const statsData = [
     {
       title: "文章总数",
-      value: "12",
-      description: "已发布文章",
+      value: stats ? formatNumber(stats.totalPosts) : "0",
+      description: `已发布 ${stats?.publishedPosts || 0} 篇`,
       icon: FileText,
-      trend: "+2",
+      trend: stats?.publishedPosts && stats.publishedPosts > 0 ? `+${stats.publishedPosts}` : "0",
       trendColor: "text-green-600",
     },
     {
       title: "页面总数",
-      value: "5",
-      description: "静态页面",
+      value: stats ? formatNumber(stats.totalPages) : "0",
+      description: `已发布 ${stats?.publishedPages || 0} 个`,
       icon: File,
-      trend: "+1",
+      trend: stats?.publishedPages && stats.publishedPages > 0 ? `+${stats.publishedPages}` : "0",
       trendColor: "text-green-600",
     },
     {
       title: "标签总数",
-      value: "8",
+      value: stats ? formatNumber(stats.totalTags) : "0",
       description: "文章标签",
       icon: Tags,
-      trend: "0",
-      trendColor: "text-gray-600",
+      trend: stats?.totalTags && stats.totalTags > 0 ? `+${stats.totalTags}` : "0",
+      trendColor: stats?.totalTags && stats.totalTags > 0 ? "text-green-600" : "text-gray-600",
     },
     {
       title: "媒体文件",
-      value: "24",
+      value: stats ? formatNumber(stats.totalMedia) : "0",
       description: "上传的文件",
       icon: Image,
-      trend: "+5",
-      trendColor: "text-green-600",
+      trend: stats?.totalMedia && stats.totalMedia > 0 ? `+${stats.totalMedia}` : "0",
+      trendColor: stats?.totalMedia && stats.totalMedia > 0 ? "text-green-600" : "text-gray-600",
     },
     {
       title: "用户总数",
-      value: "3",
-      description: "注册用户",
+      value: stats ? formatNumber(stats.totalUsers) : "0",
+      description: `活跃 ${stats?.activeUsers || 0} 人`,
       icon: Users,
-      trend: "+1",
-      trendColor: "text-green-600",
+      trend: stats?.activeUsers && stats.activeUsers > 0 ? `+${stats.activeUsers}` : "0",
+      trendColor: stats?.activeUsers && stats.activeUsers > 0 ? "text-green-600" : "text-gray-600",
     },
     {
       title: "总浏览量",
-      value: "1,234",
+      value: stats ? formatNumber(stats.totalViews) : "0",
       description: "文章浏览次数",
       icon: Eye,
-      trend: "+123",
+      trend: stats?.totalViews && stats.totalViews > 0 ? `+${formatNumber(Math.floor(stats.totalViews * 0.1))}` : "0",
       trendColor: "text-green-600",
     },
   ]
 
-  const recentPosts = [
-    {
-      title: "Hello World",
-      date: "2024-01-15",
-      views: 123,
-      status: "已发布",
-    },
-    {
-      title: "Getting Started",
-      date: "2024-01-14",
-      views: 89,
-      status: "已发布",
-    },
-    {
-      title: "Next.js 15 新特性",
-      date: "2024-01-13",
-      views: 67,
-      status: "草稿",
-    },
-  ]
+  const recentPosts = stats?.recentPosts || []
 
   const quickActions = [
     {
       title: "新建文章",
-      href: "/admin/posts/new",
+      href: "/admin/posts/create",
       icon: FileText,
       description: "创建新的博客文章",
     },
@@ -102,6 +151,38 @@ export default function AdminDashboard() {
     },
   ]
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">加载统计数据...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">仪表板</h1>
+          <p className="text-muted-foreground">
+            欢迎回来，{session?.user?.name || session?.user?.username}
+          </p>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">加载统计数据时出错: {error}</p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="mt-2"
+            variant="outline"
+          >
+            重试
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* 欢迎信息 */}
@@ -114,7 +195,7 @@ export default function AdminDashboard() {
         </div>
         <div className="flex gap-2">
           <Button asChild>
-            <Link href="/admin/posts/new">
+            <Link href="/admin/posts/create">
               <Plus className="mr-2 h-4 w-4" />
               新建文章
             </Link>
@@ -124,7 +205,7 @@ export default function AdminDashboard() {
 
       {/* 统计卡片 */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {stats.map((stat) => (
+        {statsData.map((stat) => (
           <Card key={stat.title} className="transition-shadow hover:shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
@@ -168,28 +249,36 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentPosts.map((post, index) => (
-                <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium leading-none">{post.title}</p>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        post.status === "已发布" 
-                          ? "bg-green-100 text-green-800" 
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}>
-                        {post.status}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {post.date} 发布
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium">{post.views} 浏览</div>
-                  </div>
+              {recentPosts.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  暂无文章
                 </div>
-              ))}
+              ) : (
+                recentPosts.map((post) => (
+                  <div key={post.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium leading-none">{post.title}</p>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          post.status === "PUBLISHED"
+                            ? "bg-green-100 text-green-800"
+                            : post.status === "DRAFT"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}>
+                          {getStatusText(post.status)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {formatDate(post.publishedAt)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium">{formatNumber(post.viewCount)} 浏览</div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>

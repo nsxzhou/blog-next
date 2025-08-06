@@ -11,14 +11,8 @@ interface PostPageProps {
 export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
   
-  // 获取所有文章
-  const allPosts = await PostService.getPostList({
-    page: 1,
-    pageSize: 1,
-    search: slug,
-  });
-  
-  const post = allPosts.posts.find(p => p.slug === slug);
+  // 直接通过 slug 获取文章
+  const post = await PostService.getPostBySlug(slug);
   
   if (!post) {
     notFound();
@@ -90,7 +84,7 @@ export default async function PostPage({ params }: PostPageProps) {
       {post.excerpt && (
         <div className="mb-8">
           <Card>
-            <CardContent className="pt-6">
+            <CardContent>
               <p className="text-muted-foreground italic">{post.excerpt}</p>
             </CardContent>
           </Card>

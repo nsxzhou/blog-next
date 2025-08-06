@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -32,12 +32,15 @@ import {
   Calendar,
   User,
   Tag,
-  FileText
+  FileText,
+  Monitor
 } from 'lucide-react';
 import { Post, PostStatus } from '@/types/blog/post';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { PostViewer } from '@/components/admin/post-viewer';
+import { PostPreview } from '@/components/admin/post-preview';
 
 export default function PostsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -46,10 +49,12 @@ export default function PostsPage() {
   const [statusFilter, setStatusFilter] = useState<PostStatus | 'all'>('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [viewerPost, setViewerPost] = useState<Post | null>(null);
+  const [previewPost, setPreviewPost] = useState<Post | null>(null);
   const router = useRouter();
   const { data: session } = useSession();
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -82,15 +87,23 @@ export default function PostsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, statusFilter]);
 
   useEffect(() => {
     fetchPosts();
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter, fetchPosts]);
 
   const handleDeletePost = async (postId: string) => {
     setPostToDelete(postId);
     setDeleteDialogOpen(true);
+  };
+
+  const handleViewPost = (post: Post) => {
+    setViewerPost(post);
+  };
+
+  const handlePreviewPost = (post: Post) => {
+    setPreviewPost(post);
   };
 
   const confirmDeletePost = async () => {
@@ -169,7 +182,7 @@ export default function PostsPage() {
 
       {/* 搜索和过滤 */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-2">
           <div className="flex gap-4 items-center">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -231,7 +244,7 @@ export default function PostsPage() {
         ) : (
           filteredPosts.map((post) => (
             <Card key={post.id}>
-              <CardContent className="pt-6">
+              <CardContent className="pt-2">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
@@ -278,7 +291,24 @@ export default function PostsPage() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => handleViewPost(post)}
+                      title="查看文章"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handlePreviewPost(post)}
+                      title="预览文章"
+                    >
+                      <Monitor className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => router.push(`/admin/posts/${post.id}/edit`)}
+                      title="编辑文章"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -289,9 +319,17 @@ export default function PostsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => router.push(`/blog/posts/${post.slug}`)}>
+                        <DropdownMenuItem onClick={() => handleViewPost(post)}>
                           <Eye className="w-4 h-4 mr-2" />
                           查看文章
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handlePreviewPost(post)}>
+                          <Monitor className="w-4 h-4 mr-2" />
+                          预览文章
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => window.open(`/posts/${post.slug}`, '_blank')}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          在新窗口打开
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => router.push(`/admin/posts/${post.id}/edit`)}>
                           <Edit className="w-4 h-4 mr-2" />
@@ -333,6 +371,20 @@ export default function PostsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* 文章查看器 */}
+      <PostViewer
+        post={viewerPost}
+        isOpen={!!viewerPost}
+        onClose={() => setViewerPost(null)}
+      />
+
+      {/* 文章预览器 */}
+      <PostPreview
+        post={previewPost}
+        isOpen={!!previewPost}
+        onClose={() => setPreviewPost(null)}
+      />
     </div>
   );
 }
