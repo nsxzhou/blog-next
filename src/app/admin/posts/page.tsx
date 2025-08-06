@@ -33,13 +33,11 @@ import {
   User,
   Tag,
   FileText,
-  Monitor
 } from 'lucide-react';
 import { Post, PostStatus } from '@/types/blog/post';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { PostViewer } from '@/components/admin/post-viewer';
 
 export default function PostsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -48,8 +46,6 @@ export default function PostsPage() {
   const [statusFilter, setStatusFilter] = useState<PostStatus | 'all'>('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
-  const [viewerPost, setViewerPost] = useState<Post | null>(null);
-  const [viewerMode, setViewerMode] = useState<'simple' | 'preview'>('simple');
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -97,10 +93,6 @@ export default function PostsPage() {
     setDeleteDialogOpen(true);
   };
 
-  const handleViewPost = (post: Post, mode: 'simple' | 'preview' = 'simple') => {
-    setViewerPost(post);
-    setViewerMode(mode);
-  };
 
   const confirmDeletePost = async () => {
     if (!postToDelete) return;
@@ -287,14 +279,6 @@ export default function PostsPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleViewPost(post, 'preview')}
-                      title="预览文章"
-                    >
-                      <Monitor className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
                       onClick={() => router.push(`/admin/posts/${post.id}/edit`)}
                       title="编辑文章"
                     >
@@ -307,10 +291,6 @@ export default function PostsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewPost(post, 'preview')}>
-                          <Monitor className="w-4 h-4 mr-2" />
-                          预览文章
-                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => window.open(`/posts/${post.slug}`, '_blank')}>
                           <Eye className="w-4 h-4 mr-2" />
                           在新窗口打开
@@ -356,13 +336,6 @@ export default function PostsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* 统一文章查看器 */}
-      <PostViewer
-        post={viewerPost}
-        isOpen={!!viewerPost}
-        onClose={() => setViewerPost(null)}
-        initialMode={viewerMode}
-      />
     </div>
   );
 }

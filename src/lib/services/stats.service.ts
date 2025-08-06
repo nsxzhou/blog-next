@@ -227,7 +227,7 @@ export class StatsService {
     name: string
     postCount: number
   }>> {
-    return prisma.tag.findMany({
+    const tags = await prisma.tag.findMany({
       include: {
         _count: {
           select: { posts: true }
@@ -238,15 +238,10 @@ export class StatsService {
           _count: 'desc'
         }
       },
-      take: limit,
-      select: {
-        id: true,
-        name: true,
-        _count: {
-          select: { posts: true }
-        }
-      }
-    }).map(tag => ({
+      take: limit
+    })
+
+    return tags.map((tag: any) => ({
       id: tag.id,
       name: tag.name,
       postCount: tag._count.posts

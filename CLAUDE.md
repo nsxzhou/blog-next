@@ -4,25 +4,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-这是一个基于 Next.js 15 的现代化博客系统，使用 TypeScript、Prisma ORM 和 MySQL 数据库构建。系统支持文章管理、页面管理、标签系统、媒体管理、用户认证和搜索功能。
+这是一个基于 Next.js 15 的现代化博客系统，使用 TypeScript、Prisma ORM 和 MySQL 数据库构建。系统支持文章管理、页面管理、标签系统、媒体管理、用户认证和搜索功能。支持富文本编辑器和 Markdown 内容创作。
 
 ## 技术栈
 
-- **框架**: Next.js 15 (App Router)
-- **语言**: TypeScript
+- **框架**: Next.js 15 (App Router) 支持 Turbopack
+- **语言**: TypeScript (严格模式)
 - **数据库**: MySQL + Prisma ORM
 - **认证**: NextAuth.js
 - **状态管理**: Zustand
 - **样式**: Tailwind CSS 4
-- **UI组件**: Radix UI + shadcn/ui
+- **UI组件**: Radix UI + shadcn/ui (New York 风格)
+- **富文本编辑器**: Toast UI Editor
+- **Markdown 处理**: react-markdown + remark-gfm
 - **表单验证**: Zod
 - **通知**: Sonner
+- **图标**: Lucide React
+- **加密**: bcrypt
 
 ## 常用开发命令
 
 ### 开发环境
 ```bash
-# 启动开发服务器
+# 启动开发服务器（支持 Turbopack）
 npm run dev
 
 # 使用本地环境配置启动
@@ -144,18 +148,33 @@ src/
 ### TypeScript 配置
 - 严格模式启用
 - 路径别名配置：`@/*` 指向 `src/*`
-- 生成的 Prisma 客户端在 `src/generated/prisma/`
+- Prisma 客户端生成在默认位置 `node_modules/.prisma/client`
 
 ### ESLint 配置
 - 继承 Next.js 核心规则
-- 忽略生成的 Prisma 客户端文件
-- 放宽一些 TypeScript 警告规则
+- 使用 ESLint 9.x
+- TypeScript 支持启用
 
-### 组件开发
-- 使用函数组件和 React Hooks
-- 优先使用 Server Components
-- 客户端组件使用 `'use client'` 指令
-- 遵循 shadcn/ui 组件规范
+### shadcn/ui 配置
+- 使用 New York 风格
+- 启用 RSC 和 TypeScript
+- CSS 变量模式启用
+- 基础颜色：zinc
+- 图标库：Lucide React
+- 组件别名：`@/components`, `@/lib/utils`, `@/components/ui`
+
+### 富文本编辑器
+- 使用 Toast UI Editor (@toast-ui/react-editor)
+- 支持 Markdown 编辑和预览
+- 自定义样式和主题支持
+
+### 图片配置
+- 支持多个外部图片域名：
+  - via.placeholder.com
+  - images.unsplash.com
+  - images.pexels.com
+  - source.unsplash.com
+- 使用 Next.js Image 优化
 
 ## 开发注意事项
 
@@ -163,8 +182,10 @@ src/
 2. **认证**: 使用 NextAuth.js 进行用户认证和授权
 3. **API 设计**: 遵循 RESTful 设计原则，使用统一的响应格式
 4. **类型安全**: 充分利用 TypeScript 的类型检查
-5. **代码生成**: Prisma 客户端生成到 `src/generated/prisma/` 目录
+5. **代码生成**: Prisma 客户端生成到默认位置 `node_modules/.prisma/client`
 6. **环境隔离**: 使用不同的环境文件进行开发和生产环境配置
+7. **富文本编辑**: 使用 Toast UI Editor 进行内容创作，支持 Markdown 语法
+8. **组件开发**: 使用函数组件和 React Hooks，优先使用 Server Components，客户端组件使用 `'use client'` 指令
 
 ## 服务层架构详解
 
@@ -212,9 +233,10 @@ src/
 ## 关键技术细节
 
 ### Prisma 配置
-- 输出目录：`src/generated/prisma/`
+- 输出目录：默认 `node_modules/.prisma/client`
 - 数据库：MySQL
 - 支持复杂的关系查询和事务
+- Seed 脚本：`tsx prisma/seed.ts`
 
 ### 路由结构
 - **(admin)**: 管理后台路由组，需要认证
@@ -231,3 +253,27 @@ src/
 - 支持文章、页面、标签的全文搜索
 - 搜索建议功能
 - 实时搜索结果过滤
+
+## 最新功能更新
+
+### 编辑器改进
+- 已移除 MDX 支持，专注于 Markdown 和富文本编辑
+- Toast UI Editor 集成，提供更好的编辑体验
+- 支持模板系统和示例内容
+
+### UI 组件更新
+- Dialog 组件重构（删除了 Dialog.tsx，使用新的 dialog.tsx）
+- 搜索模态框优化
+- 文章查看器组件已移除（post-viewer.tsx）
+
+### 统计服务
+- 增强的统计服务功能
+- 更好的数据分析支持
+
+### 依赖更新
+- React 19.1.0
+- Next.js 15.4.5
+- Prisma 6.13.0
+- Zod 4.0.14
+- Tailwind CSS 4
+- Toast UI Editor 3.2.2

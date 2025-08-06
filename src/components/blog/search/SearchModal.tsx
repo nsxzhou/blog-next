@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog/Dialog";
+} from "@/components/ui/dialog";
 import { SearchResult } from "@/types/blog/search";
 import { useSearchStore } from "@/lib/stores";
 import { useUIStore } from "@/lib/stores/uiStore";
