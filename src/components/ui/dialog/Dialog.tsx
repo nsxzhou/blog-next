@@ -140,10 +140,31 @@ const DialogDescription = ({ children, className }: DialogDescriptionProps) => {
   );
 };
 
+/**
+ * 对话框底部组件
+ */
+interface DialogFooterProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+const DialogFooter = ({ children, className }: DialogFooterProps) => {
+  return (
+    <div className={cn(
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      "space-y-2 space-y-reverse sm:space-y-0",
+      className
+    )}>
+      {children}
+    </div>
+  );
+};
+
 export {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 };

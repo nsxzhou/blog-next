@@ -1,5 +1,7 @@
 import { PostCard } from "@/components/blog/post/PostCard";
 import { Post } from "@/types/blog/post";
+import { PostsEmptyState } from "@/components/ui/empty-state";
+import Link from "next/link";
 
 /**
  * 最新文章展示组件
@@ -18,13 +20,20 @@ export function LatestPosts({ posts, maxPosts = 6 }: LatestPostsProps) {
   // 过滤已发布的文章
   const publishedPosts = displayPosts.filter(post => post.status === 'PUBLISHED');
   
-  // 如果没有已发布的文章，显示占位内容
+  // 如果没有已发布的文章，显示空状态
   if (publishedPosts.length === 0) {
     return (
       <section className="py-16">
-        <div className="text-center space-y-4">
-          <h2 className="text-3xl font-bold">最新文章</h2>
-          <p className="text-muted-foreground">暂无已发布的文章</p>
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+              最新文章
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              探索最新的技术文章和思考
+            </p>
+          </div>
+          <PostsEmptyState />
         </div>
       </section>
     );
@@ -53,7 +62,7 @@ export function LatestPosts({ posts, maxPosts = 6 }: LatestPostsProps) {
         {/* 查看更多按钮 */}
         {posts.length > maxPosts && (
           <div className="text-center">
-            <a
+            <Link
               href="/posts"
               className="inline-flex items-center px-6 py-3 border border-border rounded-lg font-medium hover:bg-accent transition-colors"
             >
@@ -61,7 +70,7 @@ export function LatestPosts({ posts, maxPosts = 6 }: LatestPostsProps) {
               <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </a>
+            </Link>
           </div>
         )}
       </div>
