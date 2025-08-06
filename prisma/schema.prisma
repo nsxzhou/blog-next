@@ -19,9 +19,9 @@ model Post {
   id          String   @id @default(cuid())    // 文章唯一标识符
   title       String                           // 文章标题
   slug        String   @unique                 // 文章URL友好标识符，用于SEO
-  content     String                           // 文章内容（Markdown格式）
+  content     String   @db.LongText            // 文章内容（Markdown格式，支持长文本）
   excerpt     String?                          // 文章摘要，用于列表展示
-  searchContent String?                        // 搜索内容（纯文本，去除Markdown格式）
+  searchContent String? @db.LongText           // 搜索内容（纯文本，去除Markdown格式）
   status      PostStatus @default(DRAFT)       // 文章状态：草稿、已发布、已归档
   publishedAt DateTime?                       // 发布时间，null表示未发布
   createdAt   DateTime @default(now())        // 创建时间
@@ -51,9 +51,9 @@ model Page {
   id          String   @id @default(cuid())    // 页面唯一标识符
   title       String                           // 页面标题
   slug        String   @unique                 // 页面URL友好标识符
-  content     String                           // 页面内容（Markdown格式）
+  content     String   @db.LongText            // 页面内容（Markdown格式，支持长文本）
   excerpt     String?                          // 页面摘要
-  searchContent String?                        // 搜索内容（纯文本，去除Markdown格式）
+  searchContent String? @db.LongText           // 搜索内容（纯文本，去除Markdown格式）
   status      PageStatus @default(DRAFT)       // 页面状态：草稿、已发布、已归档
   publishedAt DateTime?                       // 发布时间
   createdAt   DateTime @default(now())        // 创建时间

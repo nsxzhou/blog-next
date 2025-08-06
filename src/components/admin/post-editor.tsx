@@ -16,9 +16,27 @@ import {
   X, 
   Tag as TagIcon,
   FileText,
-  ArrowLeft
+  ArrowLeft,
+  BookOpen, 
+  Code, 
+  LayoutTemplate,
+  ChevronDown
 } from 'lucide-react';
 import { Post, PostStatus, Tag } from '@/types/blog/post';
+import { 
+  getExamplesByCategory, 
+  getExampleById 
+} from '@/lib/templates/mdx-examples';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface PostEditorProps {
   post?: Post;
@@ -146,6 +164,37 @@ export function PostEditor({
     setStatus(PostStatus.PUBLISHED);
   };
 
+  // 处理示例内容插入
+  const handleInsertExample = (exampleId: string) => {
+    const example = getExampleById(exampleId);
+    if (example) {
+      // 如果当前内容为空，直接替换
+      if (!content.trim()) {
+        setContent(example.content);
+      } else {
+        // 如果已有内容，询问是否追加
+        const userConfirm = confirm(
+          '编辑器中已有内容，是否要将示例内容追加到现有内容后面？\n\n点击"确定"追加，点击"取消"替换现有内容。'
+        );
+        
+        if (userConfirm) {
+          // 追加内容
+          setContent(content + '\n\n' + example.content);
+        } else {
+          // 替换内容
+          setContent(example.content);
+        }
+      }
+    }
+  };
+
+  // 清空内容
+  const handleClearContent = () => {
+    if (content.trim() && confirm('确定要清空编辑器内容吗？')) {
+      setContent('');
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="flex justify-between items-center mb-6">
@@ -229,17 +278,168 @@ export function PostEditor({
                   </div>
 
                   <div>
-                    <Label htmlFor="content">内容 (MDX)</Label>
-                    <Textarea
-                      id="content"
-                      value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                      placeholder="使用 Markdown/MDX 格式编写内容"
-                      className="mt-1 font-mono text-sm"
-                      rows={15}
-                    />
+                    <div className="flex items-center justify-between mb-2">
+                      <Label htmlFor="content">内容 (MDX)</Label>
+                      <div className="flex items-center gap-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <LayoutTemplate className="w-4 h-4 mr-2" />
+                              插入示例
+                              <ChevronDown className="w-4 h-4 ml-2" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuSub>
+                              <DropdownMenuSubTrigger>
+                                <BookOpen className="w-4 h-4 mr-2" />
+                                基础示例
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent>
+                                {getExamplesByCategory('basic').map((example) => (
+                                  <DropdownMenuItem
+                                    key={example.id}
+                                    onClick={() => handleInsertExample(example.id)}
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{example.name}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {example.description}
+                                      </span>
+                                    </div>
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+
+                            <DropdownMenuSub>
+                              <DropdownMenuSubTrigger>
+                                <Code className="w-4 h-4 mr-2" />
+                                代码示例
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent>
+                                {getExamplesByCategory('code').map((example) => (
+                                  <DropdownMenuItem
+                                    key={example.id}
+                                    onClick={() => handleInsertExample(example.id)}
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{example.name}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {example.description}
+                                      </span>
+                                    </div>
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+
+                            <DropdownMenuSub>
+                              <DropdownMenuSubTrigger>
+                                <FileText className="w-4 h-4 mr-2" />
+                                结构示例
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent>
+                                {getExamplesByCategory('structure').map((example) => (
+                                  <DropdownMenuItem
+                                    key={example.id}
+                                    onClick={() => handleInsertExample(example.id)}
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{example.name}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {example.description}
+                                      </span>
+                                    </div>
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+
+                            <DropdownMenuSub>
+                              <DropdownMenuSubTrigger>
+                                <LayoutTemplate className="w-4 h-4 mr-2" />
+                                高级示例
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent>
+                                {getExamplesByCategory('advanced').map((example) => (
+                                  <DropdownMenuItem
+                                    key={example.id}
+                                    onClick={() => handleInsertExample(example.id)}
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{example.name}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {example.description}
+                                      </span>
+                                    </div>
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={handleClearContent}>
+                              <span className="text-red-600">清空内容</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <Textarea
+                        id="content"
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        placeholder="使用 Markdown/MDX 格式编写内容，或点击上方'插入示例'按钮快速开始"
+                        className="mt-1 font-mono text-sm"
+                        rows={15}
+                      />
+                      
+                      {/* 空状态提示 */}
+                      {!content.trim() && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="text-center p-6 bg-background/80 backdrop-blur-sm rounded-lg border border-dashed border-border">
+                            <LayoutTemplate className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                            <h3 className="text-lg font-semibold mb-2">开始写作</h3>
+                            <p className="text-sm text-muted-foreground mb-4">
+                              编辑器为空，点击上方&quot;插入示例&quot;按钮快速开始
+                            </p>
+                            <div className="flex flex-wrap gap-2 justify-center">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleInsertExample('basic-article')}
+                                className="pointer-events-auto"
+                              >
+                                <BookOpen className="w-4 h-4 mr-2" />
+                                基础文章
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleInsertExample('tutorial-example')}
+                                className="pointer-events-auto"
+                              >
+                                <FileText className="w-4 h-4 mr-2" />
+                                完整教程
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleInsertExample('code-example')}
+                                className="pointer-events-auto"
+                              >
+                                <Code className="w-4 h-4 mr-2" />
+                                代码示例
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                      支持 Markdown 语法和 MDX 组件
+                      支持 Markdown 语法和 MDX 组件。使用上方&quot;插入示例&quot;按钮快速添加内容模板。
                     </p>
                   </div>
                 </CardContent>
