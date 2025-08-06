@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -37,6 +36,8 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Editor } from '@toast-ui/react-editor';
+import '@toast-ui/editor/dist/toastui-editor.css';
 
 interface PostEditorProps {
   post?: Post;
@@ -57,6 +58,7 @@ export function PostEditor({
   const [slug, setSlug] = useState(post?.slug || '');
   const [excerpt, setExcerpt] = useState(post?.excerpt || '');
   const [content, setContent] = useState(post?.content || '');
+  const editorRef = useRef<any>(null);
   const [tags, setTags] = useState<string[]>(post?.tags?.map(tag => tag.name) || []);
   const [newTag, setNewTag] = useState('');
   const [isFeatured, setIsFeatured] = useState(post?.featured || false);
@@ -167,10 +169,13 @@ export function PostEditor({
   // 处理示例内容插入
   const handleInsertExample = (exampleId: string) => {
     const example = getExampleById(exampleId);
-    if (example) {
+    if (example && editorRef.current) {
+      const editor = editorRef.current.getInstance();
+      const currentContent = editor.getMarkdown();
+      
       // 如果当前内容为空，直接替换
-      if (!content.trim()) {
-        setContent(example.content);
+      if (!currentContent.trim()) {
+        editor.setMarkdown(example.content);
       } else {
         // 如果已有内容，询问是否追加
         const userConfirm = confirm(
@@ -179,10 +184,10 @@ export function PostEditor({
         
         if (userConfirm) {
           // 追加内容
-          setContent(content + '\n\n' + example.content);
+          editor.setMarkdown(currentContent + '\n\n' + example.content);
         } else {
           // 替换内容
-          setContent(example.content);
+          editor.setMarkdown(example.content);
         }
       }
     }
@@ -190,8 +195,21 @@ export function PostEditor({
 
   // 清空内容
   const handleClearContent = () => {
-    if (content.trim() && confirm('确定要清空编辑器内容吗？')) {
-      setContent('');
+    if (editorRef.current) {
+      const editor = editorRef.current.getInstance();
+      const currentContent = editor.getMarkdown();
+      if (currentContent.trim() && confirm('确定要清空编辑器内容吗？')) {
+        editor.setMarkdown('');
+      }
+    }
+  };
+
+  // 处理编辑器内容变化
+  const handleEditorChange = () => {
+    if (editorRef.current) {
+      const editor = editorRef.current.getInstance();
+      const markdown = editor.getMarkdown();
+      setContent(markdown);
     }
   };
 
@@ -267,19 +285,19 @@ export function PostEditor({
                   
                   <div>
                     <Label htmlFor="excerpt">摘要</Label>
-                    <Textarea
+                    <textarea
                       id="excerpt"
                       value={excerpt}
                       onChange={(e) => setExcerpt(e.target.value)}
                       placeholder="输入文章摘要"
-                      className="mt-1"
+                      className="mt-1 flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       rows={3}
                     />
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <Label htmlFor="content">内容 (MDX)</Label>
+                      <Label htmlFor="content">内容 (Markdown)</Label>
                       <div className="flex items-center gap-2">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -387,59 +405,20 @@ export function PostEditor({
                       </div>
                     </div>
                     <div className="relative">
-                      <Textarea
-                        id="content"
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        placeholder="使用 Markdown/MDX 格式编写内容，或点击上方'插入示例'按钮快速开始"
-                        className="mt-1 font-mono text-sm"
-                        rows={15}
+                      <Editor
+                        ref={editorRef}
+                        initialValue={content || '开始写作...'}
+                        previewStyle="vertical"
+                        height="400px"
+                        initialEditType="markdown"
+                        useCommandShortcut={true}
+                        usageStatistics={false}
+                        onChange={handleEditorChange}
+                        placeholder="使用 Markdown 格式编写内容，或点击上方'插入示例'按钮快速开始"
                       />
-                      
-                      {/* 空状态提示 */}
-                      {!content.trim() && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="text-center p-6 bg-background/80 backdrop-blur-sm rounded-lg border border-dashed border-border">
-                            <LayoutTemplate className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                            <h3 className="text-lg font-semibold mb-2">开始写作</h3>
-                            <p className="text-sm text-muted-foreground mb-4">
-                              编辑器为空，点击上方&quot;插入示例&quot;按钮快速开始
-                            </p>
-                            <div className="flex flex-wrap gap-2 justify-center">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleInsertExample('basic-article')}
-                                className="pointer-events-auto"
-                              >
-                                <BookOpen className="w-4 h-4 mr-2" />
-                                基础文章
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleInsertExample('tutorial-example')}
-                                className="pointer-events-auto"
-                              >
-                                <FileText className="w-4 h-4 mr-2" />
-                                完整教程
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleInsertExample('code-example')}
-                                className="pointer-events-auto"
-                              >
-                                <Code className="w-4 h-4 mr-2" />
-                                代码示例
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                      支持 Markdown 语法和 MDX 组件。使用上方&quot;插入示例&quot;按钮快速添加内容模板。
+                      支持 Markdown 语法和实时预览。使用上方&quot;插入示例&quot;按钮快速添加内容模板。
                     </p>
                   </div>
                 </CardContent>

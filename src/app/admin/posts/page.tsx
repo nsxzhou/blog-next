@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -21,13 +21,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  MoreHorizontal, 
-  Edit, 
-  Trash2, 
+import {
+  Plus,
+  Search,
+  Filter,
+  MoreHorizontal,
+  Edit,
+  Trash2,
   Eye,
   Calendar,
   User,
@@ -40,7 +40,6 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { PostViewer } from '@/components/admin/post-viewer';
-import { PostPreview } from '@/components/admin/post-preview';
 
 export default function PostsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -50,7 +49,7 @@ export default function PostsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [viewerPost, setViewerPost] = useState<Post | null>(null);
-  const [previewPost, setPreviewPost] = useState<Post | null>(null);
+  const [viewerMode, setViewerMode] = useState<'simple' | 'preview'>('simple');
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -61,20 +60,20 @@ export default function PostsPage() {
         page: '1',
         pageSize: '20',
       });
-      
+
       if (searchTerm) {
         params.append('search', searchTerm);
       }
-      
+
       if (statusFilter !== 'all') {
         params.append('status', statusFilter);
       }
-      
+
       const response = await fetch(`/api/posts?${params.toString()}`);
       if (!response.ok) {
         throw new Error('获取文章列表失败');
       }
-      
+
       const result = await response.json();
       if (result.success) {
         setPosts(result.data.posts);
@@ -98,12 +97,9 @@ export default function PostsPage() {
     setDeleteDialogOpen(true);
   };
 
-  const handleViewPost = (post: Post) => {
+  const handleViewPost = (post: Post, mode: 'simple' | 'preview' = 'simple') => {
     setViewerPost(post);
-  };
-
-  const handlePreviewPost = (post: Post) => {
-    setPreviewPost(post);
+    setViewerMode(mode);
   };
 
   const confirmDeletePost = async () => {
@@ -150,7 +146,7 @@ export default function PostsPage() {
   };
 
   const filteredPosts = posts.filter(post => {
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       post.excerpt?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || post.status === statusFilter;
@@ -197,8 +193,8 @@ export default function PostsPage() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
                   <Filter className="w-4 h-4 mr-2" />
-                  {statusFilter === 'all' ? '所有状态' : 
-                   statusFilter === PostStatus.PUBLISHED ? '已发布' : '草稿'}
+                  {statusFilter === 'all' ? '所有状态' :
+                    statusFilter === PostStatus.PUBLISHED ? '已发布' : '草稿'}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
@@ -254,13 +250,13 @@ export default function PostsPage() {
                         <Badge className="bg-yellow-100 text-yellow-800">特色</Badge>
                       )}
                     </div>
-                    
+
                     {post.excerpt && (
                       <p className="text-muted-foreground mb-3 line-clamp-2">
                         {post.excerpt}
                       </p>
                     )}
-                    
+
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
@@ -286,20 +282,12 @@ export default function PostsPage() {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 ml-4">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleViewPost(post)}
-                      title="查看文章"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handlePreviewPost(post)}
+                      onClick={() => handleViewPost(post, 'preview')}
                       title="预览文章"
                     >
                       <Monitor className="w-4 h-4" />
@@ -319,11 +307,7 @@ export default function PostsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewPost(post)}>
-                          <Eye className="w-4 h-4 mr-2" />
-                          查看文章
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handlePreviewPost(post)}>
+                        <DropdownMenuItem onClick={() => handleViewPost(post, 'preview')}>
                           <Monitor className="w-4 h-4 mr-2" />
                           预览文章
                         </DropdownMenuItem>
@@ -335,7 +319,7 @@ export default function PostsPage() {
                           <Edit className="w-4 h-4 mr-2" />
                           编辑文章
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           onClick={() => handleDeletePost(post.id)}
                           className="text-red-600"
                         >
@@ -372,18 +356,12 @@ export default function PostsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* 文章查看器 */}
+      {/* 统一文章查看器 */}
       <PostViewer
         post={viewerPost}
         isOpen={!!viewerPost}
         onClose={() => setViewerPost(null)}
-      />
-
-      {/* 文章预览器 */}
-      <PostPreview
-        post={previewPost}
-        isOpen={!!previewPost}
-        onClose={() => setPreviewPost(null)}
+        initialMode={viewerMode}
       />
     </div>
   );

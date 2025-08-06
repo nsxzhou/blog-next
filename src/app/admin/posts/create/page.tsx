@@ -15,20 +15,20 @@ export default function CreatePostPage() {
   const handleSave = async (postData: Partial<Post>) => {
     try {
       setIsLoading(true);
-      
+
       if (!session?.user?.id) {
         toast.error('请先登录');
         return;
       }
 
       // 确保 publishedAt 格式正确
-      const publishedAt = postData.publishedAt 
+      const publishedAt = postData.publishedAt
         ? postData.publishedAt.toISOString()
         : undefined;
 
       // 处理标签 - 查找或创建现有标签
       let tagIds: string[] = [];
-      
+
       if (postData.tags && postData.tags.length > 0) {
         const tagResponse = await fetch('/api/tags', {
           method: 'POST',
@@ -42,7 +42,7 @@ export default function CreatePostPage() {
             }))
           }),
         });
-        
+
         if (tagResponse.ok) {
           const tagResult = await tagResponse.json();
           if (tagResult.success && tagResult.data) {
@@ -101,7 +101,7 @@ export default function CreatePostPage() {
   };
 
   const handlePreview = () => {
-    toast.info('预览功能正在开发中');
+    toast.info('不可预览');
   };
 
   const handleCancel = () => {

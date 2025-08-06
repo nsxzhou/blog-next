@@ -47,10 +47,10 @@ export default function EditPostPage() {
   const handleSave = async (postData: Partial<Post>) => {
     try {
       setIsSaving(true);
-      
+
       // 处理标签 - 查找或创建现有标签
       let tagIds: string[] = [];
-      
+
       if (postData.tags && postData.tags.length > 0) {
         const tagResponse = await fetch('/api/tags', {
           method: 'POST',
@@ -64,7 +64,7 @@ export default function EditPostPage() {
             }))
           }),
         });
-        
+
         if (tagResponse.ok) {
           const tagResult = await tagResponse.json();
           if (tagResult.success && tagResult.data) {
@@ -109,7 +109,7 @@ export default function EditPostPage() {
 
   const handlePreview = () => {
     if (post) {
-      window.open(`/blog/posts/${post.slug}`, '_blank');
+      window.open(`/posts/${post.slug}`, '_blank');
     }
   };
 
