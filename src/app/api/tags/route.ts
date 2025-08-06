@@ -22,8 +22,15 @@ export async function POST(request: NextRequest) {
   try {
     await requireAuth()
     const body = await request.json()
-    const validatedData = await validateRequest(CreateTagSchema, body)
     
+    // 检查是否是批量查找或创建请求
+    if (body.tags && Array.isArray(body.tags)) {
+      const results = await TagService.findOrCreateTags(body.tags)
+      return successResponse(results, '批量处理标签成功', 201)
+    }
+    
+    // 单个标签创建
+    const validatedData = await validateRequest(CreateTagSchema, body)
     const result = await TagService.createTag(validatedData)
     return successResponse(result, '创建标签成功', 201)
   } catch (error) {

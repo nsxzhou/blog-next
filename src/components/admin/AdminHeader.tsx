@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { AdminBreadcrumb, useSidebar } from "@/components/admin/Sidebar"
+import { useSidebar } from "@/components/admin/Sidebar"
 import { LogOut, Settings, User, Sun, Moon, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react"
 import { ToastHelper } from "@/lib/utils/toast"
 import { useTheme } from "next-themes"
@@ -19,17 +19,10 @@ import { useEffect, useState } from "react"
 
 interface AdminHeaderProps {
   title?: string
-  breadcrumb?: Array<{
-    label: string
-    href?: string
-  }>
-  showBreadcrumb?: boolean
 }
 
 export function AdminHeader({
   title,
-  breadcrumb,
-  showBreadcrumb = true
 }: AdminHeaderProps) {
   const { data: session } = useSession()
   const { theme, setTheme } = useTheme()
@@ -78,14 +71,7 @@ export function AdminHeader({
         </div>
         
         <div className="flex-1">
-          <div className="flex items-center gap-4">
-            <div className="flex flex-col">
-              {showBreadcrumb && breadcrumb && (
-                <AdminBreadcrumb items={breadcrumb} />
-              )}
-              <h1 className="text-xl font-semibold">{title || "管理后台"}</h1>
-            </div>
-          </div>
+          <h1 className="text-xl font-semibold">{title || "管理后台"}</h1>
         </div>
 
         <div className="flex items-center space-x-4">

@@ -239,10 +239,16 @@ export class PostService {
   static async createPost(data: CreatePostRequest & { authorId: string }): Promise<Post> {
     const { tagIds, ...postData } = data
 
+    // 处理 publishedAt 字段的字符串到 Date 转换
+    const processedData = {
+      ...postData,
+      publishedAt: postData.publishedAt ? new Date(postData.publishedAt) : null,
+      searchContent: this.extractTextFromMarkdown(postData.content),
+    }
+
     const post = await prisma.post.create({
       data: {
-        ...postData,
-        searchContent: this.extractTextFromMarkdown(postData.content),
+        ...processedData,
         tags: tagIds ? {
           create: tagIds.map(tagId => ({
             tagId
@@ -311,6 +317,12 @@ export class PostService {
   static async updatePost(id: string, data: UpdatePostRequest): Promise<Post> {
     const { tagIds, ...postData } = data
 
+    // 处理 publishedAt 字段的字符串到 Date 转换
+    const processedData = {
+      ...postData,
+      publishedAt: postData.publishedAt ? new Date(postData.publishedAt) : null,
+    }
+
     const existingPost = await prisma.post.findUnique({
       where: { id },
       include: {
@@ -322,7 +334,7 @@ export class PostService {
       throw new Error('文章不存在')
     }
 
-    const updateData: PostUpdateData = { ...postData }
+    const updateData: PostUpdateData = { ...processedData }
 
     if (postData.content) {
       updateData.searchContent = this.extractTextFromMarkdown(postData.content)

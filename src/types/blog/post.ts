@@ -4,6 +4,8 @@
 
 import { PostStatus } from '@/generated/prisma'
 
+export { PostStatus }
+
 export interface Post {
   id: string
   title: string

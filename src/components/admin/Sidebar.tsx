@@ -21,7 +21,6 @@ import {
 import { Button } from "@/components/ui/forms/Button"
 import { signOut } from "next-auth/react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator, BreadcrumbHome } from "@/components/ui/breadcrumb"
 
 const menuItems = [
   {
@@ -592,36 +591,6 @@ export function MobileSidebar() {
         </div>
       </SheetContent>
     </Sheet>
-  )
-}
-
-interface AdminBreadcrumbProps {
-  items: Array<{
-    label: string
-    href?: string
-  }>
-  }
-
-export function AdminBreadcrumb({ items }: AdminBreadcrumbProps) {
-  return (
-    <Breadcrumb>
-      <BreadcrumbItem>
-        <BreadcrumbHome href="/admin" />
-      </BreadcrumbItem>
-      <BreadcrumbSeparator />
-      {items.map((item, index) => (
-        <React.Fragment key={index}>
-          <BreadcrumbItem>
-            {item.href ? (
-              <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
-            ) : (
-              <BreadcrumbPage>{item.label}</BreadcrumbPage>
-            )}
-          </BreadcrumbItem>
-          {index < items.length - 1 && <BreadcrumbSeparator />}
-        </React.Fragment>
-      ))}
-    </Breadcrumb>
   )
 }
 
