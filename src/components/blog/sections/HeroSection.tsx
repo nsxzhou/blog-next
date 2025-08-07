@@ -20,7 +20,7 @@ export function HeroSection() {
           
           {/* 简短描述 */}
           <p className="text-lg text-muted-foreground leading-relaxed">
-            简单记录，深度思考。Life is debugging, and we're all just trying to fix the bugs.
+            简单记录，深度思考。Life is debugging, and we&apos;re all just trying to fix the bugs.
           </p>
 
         </div>

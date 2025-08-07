@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Search } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 /**
  * 空状态组件
@@ -21,6 +22,7 @@ interface EmptyStateProps {
   actionUrl?: string;
   icon?: React.ReactNode;
   secondaryAction?: React.ReactNode;
+  className?: string;
 }
 
 export function EmptyState({
@@ -29,10 +31,11 @@ export function EmptyState({
   actionText,
   actionUrl,
   icon = <FileText className="h-12 w-12 text-muted-foreground" />,
-  secondaryAction
+  secondaryAction,
+  className
 }: EmptyStateProps) {
   return (
-    <Card className="w-full">
+    <Card className={cn("w-full", className)}>
       <CardContent className="flex flex-col items-center justify-center p-12 text-center space-y-6">
         {/* 图标 */}
         <div className="p-4">

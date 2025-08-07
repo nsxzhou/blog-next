@@ -1,47 +1,12 @@
 import prisma from '@/lib/db'
-
-export interface Media {
-  id: string
-  filename: string
-  originalName: string
-  path: string
-  url: string
-  mimeType: string
-  size: number
-  alt?: string
-  uploadedAt: Date
-}
-
-export interface MediaListQuery {
-  page?: number
-  pageSize?: number
-  search?: string
-  type?: string
-  sortBy?: string
-  sortOrder?: 'asc' | 'desc'
-}
-
-export interface MediaListResponse {
-  media: Media[]
-  total: number
-  page: number
-  pageSize: number
-  totalPages: number
-}
-
-export interface CreateMediaRequest {
-  filename: string
-  originalName: string
-  path: string
-  url: string
-  mimeType: string
-  size: number
-  alt?: string
-}
-
-export interface UpdateMediaRequest {
-  alt?: string
-}
+import { 
+  Media, 
+  MediaListQuery, 
+  MediaListResponse, 
+  CreateMediaRequest, 
+  UpdateMediaRequest, 
+  MediaStats 
+} from '@/types/blog/media'
 
 interface MediaWhereInput {
   OR?: Array<{
@@ -64,7 +29,16 @@ interface MediaOrderByInput {
   [key: string]: 'asc' | 'desc'
 }
 
+/**
+ * 媒体管理服务类
+ * 提供媒体文件的CRUD操作和相关功能
+ */
 export class MediaService {
+  /**
+   * 获取媒体文件列表
+   * @param query 查询参数
+   * @returns 分页的媒体文件列表
+   */
   static async getMediaList(query: MediaListQuery): Promise<MediaListResponse> {
     const {
       page = 1,
@@ -87,7 +61,7 @@ export class MediaService {
       ]
     }
 
-    if (type) {
+    if (type && type !== 'all') {
       where.mimeType = { startsWith: type }
     }
 
@@ -125,6 +99,11 @@ export class MediaService {
     }
   }
 
+  /**
+   * 根据ID获取媒体文件详情
+   * @param id 媒体文件ID
+   * @returns 媒体文件详情或null
+   */
   static async getMediaById(id: string): Promise<Media | null> {
     const media = await prisma.media.findUnique({
       where: { id }
@@ -147,6 +126,11 @@ export class MediaService {
     }
   }
 
+  /**
+   * 创建新的媒体文件记录
+   * @param data 媒体文件数据
+   * @returns 创建的媒体文件记录
+   */
   static async createMedia(data: CreateMediaRequest): Promise<Media> {
     const media = await prisma.media.create({
       data
@@ -165,6 +149,12 @@ export class MediaService {
     }
   }
 
+  /**
+   * 更新媒体文件信息
+   * @param id 媒体文件ID
+   * @param data 更新数据
+   * @returns 更新后的媒体文件记录
+   */
   static async updateMedia(id: string, data: UpdateMediaRequest): Promise<Media> {
     const existingMedia = await prisma.media.findUnique({
       where: { id }
@@ -192,6 +182,11 @@ export class MediaService {
     }
   }
 
+  /**
+   * 删除媒体文件记录
+   * @param id 媒体文件ID
+   * @throws Error 如果媒体文件不存在
+   */
   static async deleteMedia(id: string): Promise<void> {
     const existingMedia = await prisma.media.findUnique({
       where: { id }
@@ -206,7 +201,11 @@ export class MediaService {
     })
   }
 
-  static async getMediaStats() {
+  /**
+   * 获取媒体文件统计信息
+   * @returns 媒体文件统计数据
+   */
+  static async getMediaStats(): Promise<MediaStats> {
     const [total, byType, totalSize] = await Promise.all([
       prisma.media.count(),
       prisma.media.groupBy({
@@ -234,6 +233,11 @@ export class MediaService {
     }
   }
 
+  /**
+   * 获取最近上传的媒体文件
+   * @param limit 返回数量限制，默认10个
+   * @returns 最近上传的媒体文件列表
+   */
   static async getRecentMedia(limit: number = 10): Promise<Media[]> {
     const media = await prisma.media.findMany({
       orderBy: { uploadedAt: 'desc' },
@@ -251,5 +255,51 @@ export class MediaService {
       alt: item.alt || undefined,
       uploadedAt: item.uploadedAt
     }))
+  }
+
+  /**
+   * 批量删除媒体文件记录
+   * @param ids 媒体文件ID数组
+   * @returns 删除的记录数量
+   */
+  static async batchDeleteMedia(ids: string[]): Promise<number> {
+    const result = await prisma.media.deleteMany({
+      where: {
+        id: {
+          in: ids
+        }
+      }
+    })
+
+    return result.count
+  }
+
+  /**
+   * 检查媒体文件是否正在使用
+   * @param id 媒体文件ID
+   * @returns 是否正在使用及关联的内容信息
+   */
+  static async checkMediaUsage(id: string) {
+    const contentMedia = await prisma.contentMedia.findMany({
+      where: { mediaId: id },
+      include: {
+        post: {
+          select: { id: true, title: true }
+        },
+        page: {
+          select: { id: true, title: true }
+        }
+      }
+    })
+
+    const usedInPosts = contentMedia.filter(cm => cm.post).map(cm => cm.post)
+    const usedInPages = contentMedia.filter(cm => cm.page).map(cm => cm.page)
+
+    return {
+      inUse: contentMedia.length > 0,
+      posts: usedInPosts,
+      pages: usedInPages,
+      totalUsage: contentMedia.length
+    }
   }
 }
