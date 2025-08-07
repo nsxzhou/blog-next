@@ -1,36 +1,28 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { BookOpen } from "lucide-react";
 
+/**
+ * 英雄区域组件
+ * 
+ * 功能：展示博客核心信息和导航入口
+ * 特点：极简设计，居中布局，专注核心内容
+ */
 export function HeroSection() {
   return (
-    <section className="relative py-20 md:py-32 bg-gradient-to-br from-background via-background to-secondary/20">
+    <section className="pb-8 md:pb-12">
       <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
+        <div className="text-center space-y-6 max-w-2xl mx-auto">
           {/* 主标题 */}
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground">
-            欢迎来到我的博客
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+            Think & Share 思考与分享
           </h1>
           
-          {/* 副标题描述 */}
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            这是一个基于 Next.js 和 Tailwind CSS 构建的现代化博客平台，
-            专注于内容创作和优雅的阅读体验。
+          {/* 简短描述 */}
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            简单记录，深度思考。Life is debugging, and we're all just trying to fix the bugs.
           </p>
-          
-          {/* 行动按钮 */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link 
-              href="/posts" 
-              className="w-full sm:w-auto px-8 py-4 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-lg hover:shadow-xl"
-            >
-              浏览文章
-            </Link>
-            <Link 
-              href="/about" 
-              className="w-full sm:w-auto px-8 py-4 border border-border bg-background hover:bg-accent rounded-lg font-medium transition-colors"
-            >
-              了解更多
-            </Link>
-          </div>
+
         </div>
       </div>
     </section>

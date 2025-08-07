@@ -35,10 +35,10 @@ export function EmptyState({
     <Card className="w-full">
       <CardContent className="flex flex-col items-center justify-center p-12 text-center space-y-6">
         {/* 图标 */}
-        <div className="rounded-full bg-muted p-4">
+        <div className="p-4">
           {icon}
         </div>
-        
+
         {/* 文字内容 */}
         <div className="space-y-2">
           <h3 className="text-xl font-semibold tracking-tight">
@@ -48,7 +48,7 @@ export function EmptyState({
             {description}
           </p>
         </div>
-        
+
         {/* 行动按钮 */}
         {(actionText && actionUrl) && (
           <div className="flex flex-col sm:flex-row gap-3">

@@ -38,53 +38,68 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="flex h-20 items-center justify-between">
             {/* Logo和主导航 */}
-            <div className="flex items-center space-x-8">
-              <Link href="/" className="text-xl font-bold">
-                Blog Next
+            <div className="flex items-center space-x-10">
+              <Link href="/" className="group flex items-center space-x-2">
+                <div className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+                  溺水寻舟
+                </div>
               </Link>
-              <nav className="hidden md:flex items-center space-x-6">
-                <Link href="/" className="text-sm font-medium transition-colors hover:text-primary">
-                  首页
-                </Link>
-                <Link href="/posts" className="text-sm font-medium transition-colors hover:text-primary">
-                  文章
-                </Link>
-                <Link href="/about" className="text-sm font-medium transition-colors hover:text-primary">
+              <nav className="hidden lg:flex items-center space-x-8">
+                <Link 
+                  href="/about" 
+                  className="text-sm font-medium text-muted-foreground transition-all duration-200 hover:text-foreground hover:scale-105"
+                >
                   关于
+                </Link>
+                <Link 
+                  href="/archive" 
+                  className="text-sm font-medium text-muted-foreground transition-all duration-200 hover:text-foreground hover:scale-105"
+                >
+                  归档
                 </Link>
               </nav>
             </div>
             
             {/* 右侧工具栏 */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               {/* 搜索按钮 */}
               <Button 
                 variant="ghost" 
                 size="sm"
                 onClick={() => setIsSearchOpen(true)}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-2 h-9 px-3 rounded-lg bg-muted/50 hover:bg-muted transition-all duration-200 hover:scale-105"
               >
                 <Search className="h-4 w-4" />
-                <span className="hidden sm:inline">搜索</span>
+                <span className="hidden sm:inline text-xs">搜索</span>
+                <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+                  /
+                </kbd>
               </Button>
               
               {/* 认证相关按钮 */}
               {status === "loading" ? (
-                <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
+                <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
               ) : session ? (
                 <UserMenu />
               ) : (
-                <Button variant="ghost" size="sm" onClick={handleSignIn}>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleSignIn}
+                  className="h-9 px-4 rounded-lg hover:bg-muted transition-all duration-200 hover:scale-105"
+                >
                   登录
                 </Button>
               )}
               
               {/* 主题切换 */}
-              <ThemeToggle />
+              <div className="ml-1">
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </div>
