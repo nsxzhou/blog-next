@@ -20,22 +20,6 @@ export function Header() {
     signIn(undefined, { callbackUrl: pathname });
   };
 
-  // 处理键盘快捷键
-  React.useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // 按下 / 键打开搜索（排除输入框中的情况）
-      if (event.key === '/' && event.target !== document.activeElement) {
-        event.preventDefault();
-        setIsSearchOpen(true);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [setIsSearchOpen]);
-
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
@@ -75,9 +59,6 @@ export function Header() {
               >
                 <Search className="h-4 w-4" />
                 <span className="hidden sm:inline text-xs">搜索</span>
-                <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-                  /
-                </kbd>
               </Button>
               
               {/* 认证相关按钮 */}

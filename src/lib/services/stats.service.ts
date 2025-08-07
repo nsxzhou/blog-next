@@ -1,5 +1,6 @@
 import prisma from '@/lib/db'
 import { PostStatus, PageStatus, UserRole, UserStatus } from '@/generated/prisma'
+import { cache } from '@/lib/utils/cache'
 
 export interface DashboardStats {
   totalPosts: number
@@ -53,23 +54,23 @@ export interface UserStats {
 
 export class StatsService {
   static async getDashboardStats(): Promise<DashboardStats> {
-    const [
-      postStats,
-      pageStats,
-      tagCount,
-      mediaCount,
-      userStats,
-      recentPosts
-    ] = await Promise.all([
-      this.getPostStats(),
-      this.getPageStats(),
-      this.getTagCount(),
-      this.getMediaCount(),
-      this.getUserStats(),
-      this.getRecentPosts(5)
-    ])
+    const cacheKey = 'dashboard-stats'
+    
+    // 尝试从缓存获取
+    const cached = cache.get<DashboardStats>(cacheKey)
+    if (cached) {
+      return cached
+    }
 
-    return {
+    // 串行化查询以减少并发连接
+    const postStats = await this.getPostStats()
+    const pageStats = await this.getPageStats()
+    const tagCount = await this.getTagCount()
+    const mediaCount = await this.getMediaCount()
+    const userStats = await this.getUserStats()
+    const recentPosts = await this.getRecentPosts(5)
+
+    const result: DashboardStats = {
       totalPosts: postStats.total,
       publishedPosts: postStats.published,
       draftPosts: postStats.draft,
@@ -85,21 +86,23 @@ export class StatsService {
       totalViews: postStats.totalViews,
       recentPosts
     }
+
+    // 缓存5分钟
+    cache.set(cacheKey, result, 300)
+    
+    return result
   }
 
   static async getPostStats(): Promise<PostStats> {
-    const [
-      total,
-      published,
-      draft,
-      archived,
-      featured,
-      viewsAggregate
-    ] = await Promise.all([
+    // 减少并发查询，分批执行
+    const basicCounts = await Promise.all([
       prisma.post.count(),
       prisma.post.count({ where: { status: PostStatus.PUBLISHED } }),
       prisma.post.count({ where: { status: PostStatus.DRAFT } }),
-      prisma.post.count({ where: { status: PostStatus.ARCHIVED } }),
+      prisma.post.count({ where: { status: PostStatus.ARCHIVED } })
+    ])
+
+    const [featuredCount, viewsAggregate] = await Promise.all([
       prisma.post.count({ where: { featured: true } }),
       prisma.post.aggregate({ _sum: { viewCount: true } })
     ])
@@ -110,31 +113,35 @@ export class StatsService {
     })
 
     return {
-      total,
-      published,
-      draft,
-      archived,
-      featured,
+      total: basicCounts[0],
+      published: basicCounts[1],
+      draft: basicCounts[2],
+      archived: basicCounts[3],
+      featured: featuredCount,
       totalViews: viewsAggregate._sum.viewCount || 0,
       averageReadTime: Math.round(readTimeAggregate._avg.readTime || 0)
     }
   }
 
   static async getPageStats(): Promise<PageStats> {
-    const [total, published, draft, archived, featured] = await Promise.all([
+    // 分批查询减少并发连接
+    const basicCounts = await Promise.all([
       prisma.page.count(),
       prisma.page.count({ where: { status: PageStatus.PUBLISHED } }),
-      prisma.page.count({ where: { status: PageStatus.DRAFT } }),
+      prisma.page.count({ where: { status: PageStatus.DRAFT } })
+    ])
+
+    const [archivedCount, featuredCount] = await Promise.all([
       prisma.page.count({ where: { status: PageStatus.ARCHIVED } }),
       prisma.page.count({ where: { featured: true } })
     ])
 
     return {
-      total,
-      published,
-      draft,
-      archived,
-      featured
+      total: basicCounts[0],
+      published: basicCounts[1],
+      draft: basicCounts[2],
+      archived: archivedCount,
+      featured: featuredCount
     }
   }
 
@@ -147,29 +154,26 @@ export class StatsService {
   }
 
   static async getUserStats(): Promise<UserStats> {
-    const [
-      total,
-      active,
-      inactive,
-      banned,
-      admins,
-      authors
-    ] = await Promise.all([
+    // 分批查询减少并发连接
+    const basicCounts = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { status: UserStatus.ACTIVE } }),
-      prisma.user.count({ where: { status: UserStatus.INACTIVE } }),
+      prisma.user.count({ where: { status: UserStatus.INACTIVE } })
+    ])
+
+    const [bannedCount, adminCount, authorCount] = await Promise.all([
       prisma.user.count({ where: { status: UserStatus.BANNED } }),
       prisma.user.count({ where: { role: UserRole.ADMIN } }),
       prisma.user.count({ where: { role: UserRole.AUTHOR } })
     ])
 
     return {
-      total,
-      active,
-      inactive,
-      banned,
-      admins,
-      authors
+      total: basicCounts[0],
+      active: basicCounts[1],
+      inactive: basicCounts[2],
+      banned: bannedCount,
+      admins: adminCount,
+      authors: authorCount
     }
   }
 
