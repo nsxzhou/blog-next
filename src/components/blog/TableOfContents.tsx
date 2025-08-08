@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { extractHeadingsFromMarkdown, type TocItem } from '@/lib/utils/heading';
 
@@ -72,11 +71,11 @@ export function TableOfContents({ content, className }: TableOfContentsProps) {
   }
 
   return (
-    <Card className={cn("sticky top-8", className)}>
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg">目录</CardTitle>
-      </CardHeader>
-      <CardContent className="max-h-96 overflow-y-auto space-y-1">
+    <div className={cn("fixed top-1/3 -translate-y-1/2 right-24 w-64", className)}>
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold">目录</h3>
+      </div>
+      <div className="max-h-96 overflow-y-auto space-y-1">
         {tocItems.map(({ id, text, level }) => (
           <button
             key={id}
@@ -99,7 +98,7 @@ export function TableOfContents({ content, className }: TableOfContentsProps) {
             {text}
           </button>
         ))}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
