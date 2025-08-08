@@ -77,7 +77,7 @@ export function PostListItem({ post, showImage = true }: PostListItemProps) {
                   <div className="flex items-center gap-1 shrink-0">
                     <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
                     <Badge variant="secondary" className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 border-yellow-200">
-                      特色
+                      TOP
                     </Badge>
                   </div>
                 )}

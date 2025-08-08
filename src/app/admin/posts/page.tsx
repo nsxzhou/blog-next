@@ -239,7 +239,7 @@ export default function PostsPage() {
                       <h3 className="text-lg font-medium">{post.title}</h3>
                       {getStatusBadge(post.status)}
                       {post.featured && (
-                        <Badge className="bg-yellow-100 text-yellow-800">特色</Badge>
+                        <Badge className="bg-yellow-100 text-yellow-800">TOP</Badge>
                       )}
                     </div>
 

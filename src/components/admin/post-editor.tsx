@@ -456,7 +456,7 @@ export function PostEditor({
                       onChange={(e) => setIsFeatured(e.target.checked)}
                       className="rounded"
                     />
-                    <Label htmlFor="featured">设为特色文章</Label>
+                    <Label htmlFor="featured">设为TOP文章</Label>
                   </div>
 
                   <Separator />

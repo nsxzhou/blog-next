@@ -80,7 +80,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
                 {post.featured && (
                   <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                    特色
+                    TOP
                   </Badge>
                 )}
               </div>
