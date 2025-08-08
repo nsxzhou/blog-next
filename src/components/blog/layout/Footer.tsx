@@ -43,14 +43,6 @@ export function Footer() {
                   文章归档
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/contact"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
-                >
-                  联系我们
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -84,33 +76,25 @@ export function Footer() {
             {/* 版权信息 */}
             <div className="flex items-center space-x-4">
               <p className="text-sm text-muted-foreground">
-                © 2024 溺水寻舟. 保留所有权利。
+                © 2025 溺水寻舟. 保留所有权利。
               </p>
             </div>
-            
+
             {/* 社交媒体和技术标识 */}
             <div className="flex items-center space-x-6">
               <div className="flex items-center space-x-4">
                 <a
-                  href="https://github.com"
+                  href="https://github.com/nsxzhou"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
                 >
                   GitHub
                 </a>
-                <a
-                  href="https://twitter.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
-                >
-                  Twitter
-                </a>
               </div>
               <div className="hidden sm:block w-px h-4 bg-border"></div>
               <p className="text-xs text-muted-foreground flex items-center">
-                Built with <span className="ml-1 font-medium">Next.js</span>，用心书写每一行代码
+                Built with <span className="ml-1 font-medium">Next.js</span>
               </p>
             </div>
           </div>
