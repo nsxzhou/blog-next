@@ -5,7 +5,6 @@ import { TableOfContents } from '@/components/blog/TableOfContents';
 import { PostContent } from '@/components/blog/PostContent';
 import { ViewTracker } from '@/components/blog/ViewTracker';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, User, Eye, Tag } from 'lucide-react';
 
 interface PostPageProps {
@@ -32,13 +31,13 @@ export default async function PostPage({ params }: PostPageProps) {
         <div className="lg:col-span-3">
           <article className="max-w-none">
             {/* 文章头部信息 */}
-            <header className="mb-8 space-y-6">
-              <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight">
+            <header className="mb-6 space-y-4">
+              <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground leading-tight">
                 {post.title}
               </h1>
         
               {/* 文章元信息 */}
-              <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   <span>
@@ -68,7 +67,7 @@ export default async function PostPage({ params }: PostPageProps) {
               </div>
         
               {/* 状态和特色标识 */}
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2">
                 <Badge 
                   variant={post.status === 'PUBLISHED' ? 'default' : 'secondary'}
                   className={post.status === 'PUBLISHED' 
@@ -88,7 +87,7 @@ export default async function PostPage({ params }: PostPageProps) {
         
               {/* 标签 */}
               {post.tags && post.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {post.tags.map((tag) => (
                     <Badge 
                       key={tag.id} 
@@ -105,17 +104,17 @@ export default async function PostPage({ params }: PostPageProps) {
 
             {/* 文章摘要 */}
             {post.excerpt && (
-              <Card className="mb-8 border-l-4 border-l-primary/30">
-                <CardContent className="py-6">
-                  <p className="text-muted-foreground italic text-lg leading-relaxed">
+              <div className="mb-6 border-l-4 border-l-primary/40 bg-muted/20 rounded-r-lg">
+                <div className="py-4 px-6">
+                  <p className="text-muted-foreground italic leading-7">
                     {post.excerpt}
                   </p>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
 
             {/* 文章内容 */}
-            <div className="mt-8">
+            <div className="mt-6">
               <PostContent content={post.content || ''} />
             </div>
           </article>

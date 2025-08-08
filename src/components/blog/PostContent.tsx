@@ -3,7 +3,6 @@
 import React from 'react';
 import ReactMarkdown, { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { generateHeadingIdForElement } from '@/lib/utils/heading';
 
@@ -24,13 +23,12 @@ interface PostContentProps {
 export function PostContent({ content, className }: PostContentProps) {
   // 自定义组件，为标题添加ID用于目录跳转
   const components: Components = {
-    // 代码块样式优化
+    // 代码块样式优化 - 移除Card包装，使用更简洁的设计
     pre: ({ ...props }) => (
-      <Card className="my-6 overflow-hidden">
-        <CardContent className="p-0">
-          <pre {...props} className="text-sm overflow-x-auto p-4 bg-muted/30" />
-        </CardContent>
-      </Card>
+      <pre 
+        {...props} 
+        className="text-sm overflow-x-auto p-4 bg-muted/40 rounded-lg my-4 border border-border/50" 
+      />
     ),
     
     // 内联代码样式
@@ -53,13 +51,13 @@ export function PostContent({ content, className }: PostContentProps) {
       );
     },
 
-    // 标题组件，添加ID用于目录跳转
+    // 标题组件，添加ID用于目录跳转 - 优化间距
     h1: ({ children, ...props }) => {
       const id = generateHeadingIdForElement(String(children));
       return (
         <h1 
           id={id} 
-          className="scroll-mt-20 text-3xl font-bold tracking-tight mb-6 mt-8" 
+          className="scroll-mt-20 text-2xl font-bold tracking-tight mb-4 mt-6" 
           {...props}
         >
           {children}
@@ -72,7 +70,7 @@ export function PostContent({ content, className }: PostContentProps) {
       return (
         <h2 
           id={id} 
-          className="scroll-mt-20 text-2xl font-semibold tracking-tight mb-4 mt-8" 
+          className="scroll-mt-20 text-xl font-semibold tracking-tight mb-3 mt-6" 
           {...props}
         >
           {children}
@@ -85,7 +83,7 @@ export function PostContent({ content, className }: PostContentProps) {
       return (
         <h3 
           id={id} 
-          className="scroll-mt-20 text-xl font-semibold tracking-tight mb-3 mt-6" 
+          className="scroll-mt-20 text-lg font-semibold tracking-tight mb-2 mt-4" 
           {...props}
         >
           {children}
@@ -98,7 +96,7 @@ export function PostContent({ content, className }: PostContentProps) {
       return (
         <h4 
           id={id} 
-          className="scroll-mt-20 text-lg font-semibold tracking-tight mb-3 mt-6" 
+          className="scroll-mt-20 text-base font-semibold tracking-tight mb-2 mt-4" 
           {...props}
         >
           {children}
@@ -111,7 +109,7 @@ export function PostContent({ content, className }: PostContentProps) {
       return (
         <h5 
           id={id} 
-          className="scroll-mt-20 text-base font-semibold tracking-tight mb-2 mt-4" 
+          className="scroll-mt-20 text-sm font-semibold tracking-tight mb-2 mt-3" 
           {...props}
         >
           {children}
@@ -124,7 +122,7 @@ export function PostContent({ content, className }: PostContentProps) {
       return (
         <h6 
           id={id} 
-          className="scroll-mt-20 text-sm font-semibold tracking-tight mb-2 mt-4" 
+          className="scroll-mt-20 text-xs font-semibold tracking-tight mb-2 mt-3" 
           {...props}
         >
           {children}
@@ -132,40 +130,40 @@ export function PostContent({ content, className }: PostContentProps) {
       );
     },
 
-    // 段落样式优化
+    // 段落样式优化 - 减少间距
     p: ({ children, ...props }) => (
-      <p className="leading-7 mb-4 text-muted-foreground" {...props}>
+      <p className="leading-7 mb-3 text-muted-foreground" {...props}>
         {children}
       </p>
     ),
 
-    // 引用块样式
+    // 引用块样式 - 优化间距
     blockquote: ({ children, ...props }) => (
       <blockquote 
-        className="border-l-4 border-primary/30 pl-6 my-6 italic text-muted-foreground/90"
+        className="border-l-4 border-primary/40 pl-6 my-4 italic text-muted-foreground/90"
         {...props}
       >
         {children}
       </blockquote>
     ),
 
-    // 列表样式
+    // 列表样式 - 优化间距
     ul: ({ children, ...props }) => (
-      <ul className="list-disc pl-6 mb-4 space-y-1" {...props}>
+      <ul className="list-disc pl-6 mb-3 space-y-1" {...props}>
         {children}
       </ul>
     ),
 
     ol: ({ children, ...props }) => (
-      <ol className="list-decimal pl-6 mb-4 space-y-1" {...props}>
+      <ol className="list-decimal pl-6 mb-3 space-y-1" {...props}>
         {children}
       </ol>
     ),
 
-    // 表格样式
+    // 表格样式 - 优化间距
     table: ({ children, ...props }) => (
-      <div className="my-6 overflow-x-auto">
-        <table className="w-full border-collapse border border-border" {...props}>
+      <div className="my-4 overflow-x-auto">
+        <table className="w-full border-collapse border border-border rounded-lg" {...props}>
           {children}
         </table>
       </div>
