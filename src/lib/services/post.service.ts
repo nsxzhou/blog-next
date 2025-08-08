@@ -494,6 +494,31 @@ export class PostService {
     })
   }
 
+  /**
+   * 增加文章浏览量
+   * @param postId 文章ID
+   * @throws Error 当文章不存在时抛出错误
+   */
+  static async incrementViewCount(postId: string): Promise<void> {
+    const existingPost = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { id: true }
+    })
+
+    if (!existingPost) {
+      throw new Error('文章不存在')
+    }
+
+    await prisma.post.update({
+      where: { id: postId },
+      data: {
+        viewCount: {
+          increment: 1
+        }
+      }
+    })
+  }
+
   private static extractTextFromMarkdown(markdown: string): string {
     return markdown
       .replace(/#+\s+/g, '')

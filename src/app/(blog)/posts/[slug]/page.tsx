@@ -3,6 +3,7 @@ import { PostService } from '@/lib/services/post.service';
 import { BlogLayout } from '@/components/blog/layout/BlogLayout';
 import { TableOfContents } from '@/components/blog/TableOfContents';
 import { PostContent } from '@/components/blog/PostContent';
+import { ViewTracker } from '@/components/blog/ViewTracker';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, User, Eye, Tag } from 'lucide-react';
@@ -23,6 +24,9 @@ export default async function PostPage({ params }: PostPageProps) {
 
   return (
     <BlogLayout>
+      {/* 浏览量追踪组件 - 遵循 SRP 原则，独立处理浏览量逻辑 */}
+      <ViewTracker postId={post.id} />
+      
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* 主内容区域 */}
         <div className="lg:col-span-3">
