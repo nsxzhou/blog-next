@@ -7,7 +7,8 @@ import {
   Clock,
   Calendar,
   ArrowRight,
-  Tag as TagIcon
+  Tag as TagIcon,
+  Star
 } from "lucide-react";
 import coverImage  from "../../../../public/wallhaven-exm8xk.jpg"
 
@@ -65,11 +66,22 @@ export function PostListItem({ post, showImage = true }: PostListItemProps) {
             {/* 文章主要内容 */}
             <div className="space-y-3">
               {/* 文章标题 */}
-              <h3 className="text-xl lg:text-2xl font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
-                <Link href={`/posts/${post.slug}`} className="block">
-                  {post.title}
-                </Link>
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl lg:text-2xl font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors flex-1">
+                  <Link href={`/posts/${post.slug}`} className="block">
+                    {post.title}
+                  </Link>
+                </h3>
+                {/* 特色文章标记 */}
+                {post.featured && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                    <Badge variant="secondary" className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 border-yellow-200">
+                      特色
+                    </Badge>
+                  </div>
+                )}
+              </div>
 
               {/* 文章摘要 */}
               <p className="text-muted-foreground line-clamp-2 lg:line-clamp-3 leading-relaxed text-sm lg:text-base">

@@ -11,14 +11,37 @@ import { cache } from "react";
  */
 const getPostsData = cache(async (page: number, pageSize: number) => {
   try {
+    // 获取所有已发布的文章
     const data = await PostService.getPostList({
-      page,
-      pageSize,
+      page: 1, // 先获取所有文章进行排序
+      pageSize: 1000, // 使用较大的数字确保获取所有文章
       status: PostStatus.PUBLISHED,
       sortBy: 'createdAt',
       sortOrder: 'desc'
     });
-    return data;
+
+    // 按特色文章优先、创建时间降序排序
+    const sortedPosts = data.posts.sort((a, b) => {
+      // 首先按 featured 字段排序（true 在前）
+      if (a.featured !== b.featured) {
+        return b.featured ? 1 : -1;
+      }
+      // 然后按创建时间降序排序
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    // 应用分页
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedPosts = sortedPosts.slice(startIndex, endIndex);
+
+    return {
+      posts: paginatedPosts,
+      total: data.total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(data.total / pageSize)
+    };
   } catch (error) {
     console.error('获取文章数据失败:', error);
     return {
