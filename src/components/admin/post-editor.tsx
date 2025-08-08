@@ -19,7 +19,8 @@ import {
   BookOpen, 
   Code, 
   LayoutTemplate,
-  ChevronDown
+  ChevronDown,
+  Wand2
 } from 'lucide-react';
 import { Post, PostStatus, Tag } from '@/types/blog/post';
 import { 
@@ -38,6 +39,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Editor } from '@toast-ui/react-editor';
 import '@toast-ui/editor/dist/toastui-editor.css';
+import { toast } from 'sonner';
 
 interface PostEditorProps {
   post?: Post;
@@ -66,6 +68,7 @@ export function PostEditor({
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [filteredTags, setFilteredTags] = useState<Tag[]>([]);
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
+  const [isGeneratingExcerpt, setIsGeneratingExcerpt] = useState(false);
   
   // 生成 slug
   const generateSlug = useCallback((text: string) => {
@@ -213,6 +216,73 @@ export function PostEditor({
     }
   };
 
+  // 生成摘要
+  const generateExcerpt = async () => {
+    if (!content.trim()) return;
+    
+    setIsGeneratingExcerpt(true);
+    
+    try {
+      const response = await fetch('/api/coze/execute', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          parameters: {
+            input: content
+          }
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        try {
+          console.log('原始返回数据:', result);
+          
+          // 检查数据结构
+          if (result.data.output && result.data.output.data) {
+            // coze返回的数据在 result.data.output.data 中，且是JSON字符串
+            const cozeData = result.data.output.data;
+            console.log('coze数据字符串:', cozeData);
+            
+            if (typeof cozeData === 'string') {
+              const parsedData = JSON.parse(cozeData);
+              console.log('解析后的数据:', parsedData);
+              
+              const generatedExcerpt = parsedData.output;
+              console.log('提取的摘要:', generatedExcerpt);
+              
+              if (generatedExcerpt && typeof generatedExcerpt === 'string' && generatedExcerpt.trim()) {
+                setExcerpt(generatedExcerpt);
+                toast.success('摘要生成成功');
+              } else {
+                toast.error('生成的摘要内容为空');
+              }
+            } else {
+              toast.error('返回数据格式错误');
+            }
+          } else {
+            console.error('数据结构不正确:', result.data);
+            toast.error('返回数据结构不正确');
+          }
+        } catch (parseError) {
+          console.error('处理返回数据失败:', parseError);
+          toast.error('处理生成的摘要失败');
+        }
+      } else {
+        console.error('生成摘要失败:', result.error || '未知错误');
+        toast.error(result.error || '生成摘要失败，请重试');
+      }
+    } catch (error) {
+      console.error('调用生成摘要API失败:', error);
+      toast.error('生成摘要失败，请检查网络连接');
+    } finally {
+      setIsGeneratingExcerpt(false);
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="flex justify-between items-center mb-6">
@@ -284,7 +354,20 @@ export function PostEditor({
                   </div>
                   
                   <div>
-                    <Label htmlFor="excerpt">摘要</Label>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label htmlFor="excerpt">摘要</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        disabled={isGeneratingExcerpt || !content.trim()}
+                        onClick={generateExcerpt}
+                      >
+                        <Wand2 className="w-3 h-3 mr-1" />
+                        {isGeneratingExcerpt ? '生成中...' : '生成摘要'}
+                      </Button>
+                    </div>
                     <textarea
                       id="excerpt"
                       value={excerpt}
