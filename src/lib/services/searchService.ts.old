@@ -1,4 +1,4 @@
-import { create, insert, search, remove } from '@orama/orama'
+import { create, insert, search, remove, Orama } from '@orama/orama'
 import { PostService } from './post.service'
 import { PageService } from './page.service'
 
@@ -54,12 +54,12 @@ export interface SearchResponse {
  * 单一职责：只负责全文搜索
  */
 export class SearchService {
-  private static db: any = null
+  private static db: Orama<SearchDocument> | null = null
 
   /**
    * 初始化 Orama 数据库实例
    */
-  private static async initializeDB(): Promise<any> {
+  private static async initializeDB(): Promise<Orama<SearchDocument>> {
     if (this.db) {
       return this.db
     }
@@ -79,12 +79,8 @@ export class SearchService {
       }
     })
 
-    // 首次初始化时自动重建索引
-    try {
-      await this.rebuildIndex()
-    } catch (error) {
-      console.error('首次初始化搜索索引失败:', error)
-    }
+    // 初始加载所有数据
+    await this.rebuildIndex()
 
     return this.db
   }
@@ -94,39 +90,9 @@ export class SearchService {
    * 从数据库获取所有已发布的文章和页面
    */
   static async rebuildIndex(): Promise<void> {
-    try {
-      // 如果数据库实例不存在，创建新实例（但不调用rebuildIndex避免递归）
-      if (!this.db) {
-        this.db = create({
-          schema: {
-            id: 'string',
-            title: 'string',
-            content: 'string', 
-            excerpt: 'string',
-            type: 'string',
-            url: 'string',
-            tags: 'string[]',
-            publishedAt: 'string',
-            author: 'string'
-          }
-        })
-      } else {
-        // 重置现有数据库实例
-        this.db = create({
-          schema: {
-            id: 'string',
-            title: 'string',
-            content: 'string', 
-            excerpt: 'string',
-            type: 'string',
-            url: 'string',
-            tags: 'string[]',
-            publishedAt: 'string',
-            author: 'string'
-          }
-        })
-      }
+    const db = await this.initializeDB()
 
+    try {
       // 获取所有已发布的文章
       const postsResponse = await PostService.getPostList({
         status: 'PUBLISHED',
@@ -148,12 +114,12 @@ export class SearchService {
           excerpt: post.excerpt || '',
           type: 'post',
           url: `/posts/${post.slug}`,
-          tags: post.tags?.map(tag => tag.name) || [],
+          tags: post.tags.map(tag => tag.name),
           publishedAt: post.publishedAt?.toISOString(),
           author: post.author?.name || ''
         }
 
-        await insert(this.db, searchDoc)
+        await insert(db, searchDoc)
       }
 
       // 将页面数据转换为搜索文档
@@ -170,7 +136,7 @@ export class SearchService {
           author: page.author?.name || ''
         }
 
-        await insert(this.db, searchDoc)
+        await insert(db, searchDoc)
       }
 
       console.log(`搜索索引重建完成：${postsResponse.posts.length} 篇文章，${pagesResponse.pages.length} 个页面`)
@@ -201,14 +167,14 @@ export class SearchService {
       
       // 使用 Orama 执行全文搜索
       // 搜索标题、内容、摘要、标签和作者字段
-      const searchResult = await search(db, {
+      const searchResult = search(db, {
         term: term.trim(),
         properties: ['title', 'content', 'excerpt', 'tags', 'author'],
         limit
       })
 
       // 转换搜索结果格式
-      const results: SearchResult[] = searchResult.hits.map((hit: any) => ({
+      const results: SearchResult[] = searchResult.hits.map(hit => ({
         id: hit.document.id,
         title: hit.document.title,
         excerpt: hit.document.excerpt,

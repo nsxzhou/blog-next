@@ -8,14 +8,12 @@ import {
 import { SearchQuerySchema } from "@/lib/validations/search";
 
 /**
- * 搜索API路由
+ * 简化的搜索API路由
+ * 遵循 KISS 原则，只提供全文搜索功能
  * 方法：GET
  * 参数：
- *   - q: 搜索关键词
- *   - type: 内容类型（post/page/tag，可选）
+ *   - term: 搜索关键词（必需）
  *   - limit: 结果数量限制（可选，默认20）
- *   - page: 页码（可选，默认1）
- *   - pageSize: 每页数量（可选，默认20）
  */
 
 export async function GET(request: NextRequest) {
