@@ -12,6 +12,12 @@ export interface SearchResult {
   tags: string[];
   publishedAt?: string;
   score: number;
+  positions?: {
+    title?: { start: number; end: number }[];
+    excerpt?: { start: number; end: number }[];
+  };
+  highlightedTitle?: string;
+  highlightedExcerpt?: string;
 }
 
 export interface SearchQuery {

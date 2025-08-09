@@ -1,4 +1,5 @@
 import prisma from '@/lib/db'
+import { extractTextFromMarkdown } from '@/lib/utils/markdown'
 import { Post, PostListQuery, PostListResponse, CreatePostRequest, UpdatePostRequest } from '@/types/blog/post'
 import { PostStatus } from '@/generated/prisma'
 
@@ -309,7 +310,7 @@ export class PostService {
     const processedData = {
       ...postData,
       publishedAt: postData.publishedAt ? new Date(postData.publishedAt) : null,
-      searchContent: this.extractTextFromMarkdown(postData.content),
+      searchContent: extractTextFromMarkdown(postData.content),
     }
 
     const post = await prisma.post.create({
@@ -403,7 +404,7 @@ export class PostService {
     const updateData: PostUpdateData = { ...processedData }
 
     if (postData.content) {
-      updateData.searchContent = this.extractTextFromMarkdown(postData.content)
+      updateData.searchContent = extractTextFromMarkdown(postData.content)
     }
 
     if (tagIds !== undefined) {
@@ -519,14 +520,4 @@ export class PostService {
     })
   }
 
-  private static extractTextFromMarkdown(markdown: string): string {
-    return markdown
-      .replace(/#+\s+/g, '')
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/\*(.*?)\*/g, '$1')
-      .replace(/`(.*?)`/g, '$1')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      .replace(/\n+/g, ' ')
-      .trim()
-  }
 }

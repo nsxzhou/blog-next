@@ -1,4 +1,8 @@
-import { create, insert, search, remove } from '@orama/orama'
+import { create, insert, remove, search } from '@orama/orama'
+import { createTokenizer } from '@orama/tokenizers/mandarin'
+import { stopwords as mandarinStopwords } from '@orama/stopwords/mandarin'
+import { Highlight } from '@orama/highlight'
+import { extractTextFromMarkdown } from '@/lib/utils/markdown'
 import { PostService } from './post.service'
 import { PageService } from './page.service'
 
@@ -18,6 +22,14 @@ interface SearchDocument {
 }
 
 /**
+ * 搜索高亮位置信息接口
+ */
+export interface HighlightPosition {
+  start: number
+  length: number
+}
+
+/**
  * 搜索结果接口
  */
 export interface SearchResult {
@@ -29,6 +41,12 @@ export interface SearchResult {
   tags: string[]
   publishedAt?: string
   score: number
+  positions?: {
+    title?: { start: number; end: number }[]
+    excerpt?: { start: number; end: number }[]
+  }
+  highlightedTitle?: string
+  highlightedExcerpt?: string
 }
 
 /**
@@ -64,7 +82,12 @@ export class SearchService {
       return this.db
     }
 
-    // 创建 Orama 实例，定义搜索字段
+    // 创建中文分词器
+    const tokenizer = createTokenizer({
+      stopWords: mandarinStopwords,
+    })
+
+    // 创建 Orama 实例，定义搜索字段，配置中文分词器
     this.db = create({
       schema: {
         id: 'string',
@@ -76,6 +99,9 @@ export class SearchService {
         tags: 'string[]',
         publishedAt: 'string',
         author: 'string'
+      },
+      components: {
+        tokenizer
       }
     })
 
@@ -95,6 +121,11 @@ export class SearchService {
    */
   static async rebuildIndex(): Promise<void> {
     try {
+      // 创建中文分词器
+      const tokenizer = createTokenizer({
+        stopWords: mandarinStopwords,
+      })
+
       // 如果数据库实例不存在，创建新实例（但不调用rebuildIndex避免递归）
       if (!this.db) {
         this.db = create({
@@ -108,6 +139,9 @@ export class SearchService {
             tags: 'string[]',
             publishedAt: 'string',
             author: 'string'
+          },
+          components: {
+            tokenizer
           }
         })
       } else {
@@ -123,6 +157,9 @@ export class SearchService {
             tags: 'string[]',
             publishedAt: 'string',
             author: 'string'
+          },
+          components: {
+            tokenizer
           }
         })
       }
@@ -144,7 +181,7 @@ export class SearchService {
         const searchDoc: SearchDocument = {
           id: post.id,
           title: post.title,
-          content: post.searchContent || post.content,
+          content: post.searchContent || extractTextFromMarkdown(post.content),
           excerpt: post.excerpt || '',
           type: 'post',
           url: `/posts/${post.slug}`,
@@ -161,7 +198,7 @@ export class SearchService {
         const searchDoc: SearchDocument = {
           id: page.id,
           title: page.title,
-          content: page.searchContent || page.content,
+          content: page.searchContent || extractTextFromMarkdown(page.content),
           excerpt: page.excerpt || '',
           type: 'page',
           url: `/pages/${page.slug}`,
@@ -199,7 +236,7 @@ export class SearchService {
     try {
       const db = await this.initializeDB()
       
-      // 使用 Orama 执行全文搜索
+      // 使用 Orama 执行搜索
       // 搜索标题、内容、摘要、标签和作者字段
       const searchResult = await search(db, {
         term: term.trim(),
@@ -207,17 +244,36 @@ export class SearchService {
         limit
       })
 
-      // 转换搜索结果格式
-      const results: SearchResult[] = searchResult.hits.map((hit: any) => ({
-        id: hit.document.id,
-        title: hit.document.title,
-        excerpt: hit.document.excerpt,
-        type: hit.document.type as 'post' | 'page',
-        url: hit.document.url,
-        tags: hit.document.tags,
-        publishedAt: hit.document.publishedAt,
-        score: hit.score
-      }))
+      // 创建高亮器实例
+      const highlighter = new Highlight({
+        caseSensitive: false,
+        HTMLTag: 'mark',
+        CSSClass: 'orama-highlight'
+      })
+
+      // 转换搜索结果格式，包含高亮位置信息
+      const results: SearchResult[] = searchResult.hits.map((hit: any) => {
+        // 为标题和摘要生成高亮信息
+        const titleHighlight = highlighter.highlight(hit.document.title || '', term.trim())
+        const excerptHighlight = highlighter.highlight(hit.document.excerpt || '', term.trim())
+        
+        return {
+          id: hit.document.id,
+          title: hit.document.title,
+          excerpt: hit.document.excerpt,
+          type: hit.document.type as 'post' | 'page',
+          url: hit.document.url,
+          tags: hit.document.tags,
+          publishedAt: hit.document.publishedAt,
+          score: hit.score,
+          positions: {
+            title: titleHighlight.positions,
+            excerpt: excerptHighlight.positions
+          },
+          highlightedTitle: titleHighlight.HTML,
+          highlightedExcerpt: excerptHighlight.HTML
+        }
+      })
 
       return {
         results,

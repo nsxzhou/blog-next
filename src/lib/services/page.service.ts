@@ -1,4 +1,5 @@
 import prisma from '@/lib/db'
+import { extractTextFromMarkdown } from '@/lib/utils/markdown'
 import { Page, PageListQuery, PageListResponse, CreatePageRequest, UpdatePageRequest } from '@/types/blog/page'
 import { PageStatus } from '@/generated/prisma'
 
@@ -197,7 +198,7 @@ export class PageService {
     const page = await prisma.page.create({
       data: {
         ...data,
-        searchContent: this.extractTextFromMarkdown(data.content)
+        searchContent: extractTextFromMarkdown(data.content)
       },
       include: {
         author: {
@@ -257,7 +258,7 @@ export class PageService {
     const updateData: PageUpdateData = { ...data }
 
     if (data.content) {
-      updateData.searchContent = this.extractTextFromMarkdown(data.content)
+      updateData.searchContent = extractTextFromMarkdown(data.content)
     }
 
     const page = await prisma.page.update({
@@ -323,14 +324,4 @@ export class PageService {
     })
   }
 
-  private static extractTextFromMarkdown(markdown: string): string {
-    return markdown
-      .replace(/#+\s+/g, '')
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/\*(.*?)\*/g, '$1')
-      .replace(/`(.*?)`/g, '$1')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      .replace(/\n+/g, ' ')
-      .trim()
-  }
 }
