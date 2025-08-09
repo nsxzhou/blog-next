@@ -1,6 +1,5 @@
 import prisma from '@/lib/db'
 import { PostStatus, PageStatus, UserRole, UserStatus } from '@/generated/prisma'
-import { cache } from '@/lib/utils/cache'
 
 export interface DashboardStats {
   totalPosts: number
@@ -54,14 +53,6 @@ export interface UserStats {
 
 export class StatsService {
   static async getDashboardStats(): Promise<DashboardStats> {
-    const cacheKey = 'dashboard-stats'
-    
-    // 尝试从缓存获取
-    const cached = cache.get<DashboardStats>(cacheKey)
-    if (cached) {
-      return cached
-    }
-
     // 串行化查询以减少并发连接
     const postStats = await this.getPostStats()
     const pageStats = await this.getPageStats()
@@ -86,9 +77,6 @@ export class StatsService {
       totalViews: postStats.totalViews,
       recentPosts
     }
-
-    // 缓存5分钟
-    cache.set(cacheKey, result, 300)
     
     return result
   }

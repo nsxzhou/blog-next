@@ -32,7 +32,7 @@ export function Header() {
                   溺水寻舟
                 </div>
               </Link>
-              <nav className="hidden lg:flex items-center space-x-8">
+              {/* <nav className="hidden lg:flex items-center space-x-8">
                 <Link 
                   href="/about" 
                   className="text-sm font-medium text-muted-foreground transition-all duration-200 hover:text-foreground hover:scale-105"
@@ -45,7 +45,7 @@ export function Header() {
                 >
                   归档
                 </Link>
-              </nav>
+              </nav> */}
             </div>
             
             {/* 右侧工具栏 */}

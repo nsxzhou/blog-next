@@ -3,13 +3,12 @@ import { HeroSection } from "@/components/blog/sections/HeroSection";
 import { PostsList } from "@/components/blog/sections/LatestPosts";
 import { PostService } from "@/lib/services/post.service";
 import { PostStatus } from "@/generated/prisma";
-import { cache } from "react";
 
 /**
- * 缓存文章数据获取
- * 使用 React.cache 缓存数据获取结果，避免重复请求
+ * 获取文章数据
+ * 获取并排序文章数据，支持分页
  */
-const getPostsData = cache(async (page: number, pageSize: number) => {
+const getPostsData = async (page: number, pageSize: number) => {
   try {
     // 获取所有已发布的文章
     const data = await PostService.getPostList({
@@ -52,7 +51,7 @@ const getPostsData = cache(async (page: number, pageSize: number) => {
       totalPages: 0
     };
   }
-});
+};
 
 /**
  * 首页组件

@@ -24,7 +24,7 @@ export function Footer() {
           </div>
 
           {/* 导航链接 */}
-          <div className="lg:col-span-3">
+          {/* <div className="lg:col-span-3">
             <h4 className="text-sm font-semibold mb-6 text-foreground">快速链接</h4>
             <ul className="space-y-4">
               <li>
@@ -44,10 +44,10 @@ export function Footer() {
                 </Link>
               </li>
             </ul>
-          </div>
+          </div> */}
 
           {/* 法律链接 */}
-          <div className="lg:col-span-3">
+          {/* <div className="lg:col-span-3">
             <h4 className="text-sm font-semibold mb-6 text-foreground">法律信息</h4>
             <ul className="space-y-4">
               <li>
@@ -67,7 +67,7 @@ export function Footer() {
                 </Link>
               </li>
             </ul>
-          </div>
+          </div> */}
         </div>
 
         {/* 分隔线和底部信息 */}
