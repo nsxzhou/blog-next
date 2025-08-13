@@ -302,4 +302,44 @@ export class MediaService {
       totalUsage: contentMedia.length
     }
   }
+
+  /**
+   * 获取随机图片
+   * @param count 返回数量限制，默认1张
+   * @param type 媒体类型，默认'image'
+   * @returns 随机图片列表
+   */
+  static async getRandomImages(count: number = 1, type: string = 'image'): Promise<Media[]> {
+    const where: MediaWhereInput = {}
+    
+    if (type && type !== 'all') {
+      where.mimeType = { startsWith: type }
+    }
+
+    const media = await prisma.media.findMany({
+      where,
+      orderBy: { uploadedAt: 'desc' }
+    })
+
+    // 如果没有找到媒体文件，返回空数组
+    if (media.length === 0) {
+      return []
+    }
+
+    // 随机选择指定数量的媒体文件
+    const shuffled = [...media].sort(() => 0.5 - Math.random())
+    const selected = shuffled.slice(0, Math.min(count, media.length))
+
+    return selected.map(item => ({
+      id: item.id,
+      filename: item.filename,
+      originalName: item.originalName,
+      path: item.path,
+      url: item.url,
+      mimeType: item.mimeType,
+      size: item.size,
+      alt: item.alt || undefined,
+      uploadedAt: item.uploadedAt
+    }))
+  }
 }

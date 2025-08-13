@@ -1,4 +1,3 @@
-import Link from "next/link";
 
 /**
  * 页脚组件

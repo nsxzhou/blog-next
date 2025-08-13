@@ -1,6 +1,3 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { BookOpen } from "lucide-react";
 
 /**
  * 英雄区域组件

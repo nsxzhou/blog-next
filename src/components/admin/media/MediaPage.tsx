@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useCallback } from 'react'
 import {
   useMediaStore,
   useMediaQueryParams
@@ -34,7 +34,7 @@ export function MediaPage() {
    * 加载媒体文件列表
    * 根据当前查询参数获取媒体文件数据
    */
-  const loadMediaList = async () => {
+  const loadMediaList = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -63,12 +63,12 @@ export function MediaPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [queryParams, setLoading, setError, updateFromResponse])
 
   /**
    * 加载统计信息
    */
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       const response = await fetch('/api/media/stats')
       const result = await response.json()
@@ -81,7 +81,7 @@ export function MediaPage() {
     } catch (err) {
       console.error('加载统计信息失败:', err)
     }
-  }
+  }, [setStats])
 
   // 组件挂载时加载数据
   useEffect(() => {
@@ -90,22 +90,15 @@ export function MediaPage() {
       await loadStats()
     }
     loadData()
-  }, [])
+  }, [loadMediaList, loadStats])
 
   // 监听查询参数变化，重新加载数据
   // 使用 useMemo 缓存参数对象，确保只有在真正变化时才重新加载
-  const memoizedParams = useMemo(() => queryParams, [
-    queryParams.page,
-    queryParams.pageSize,
-    queryParams.search,
-    queryParams.type,
-    queryParams.sortBy,
-    queryParams.sortOrder
-  ])
+  const memoizedParams = useMemo(() => queryParams, [queryParams])
   
   useEffect(() => {
     loadMediaList()
-  }, [memoizedParams])
+  }, [memoizedParams, loadMediaList])
 
   /**
    * 刷新数据

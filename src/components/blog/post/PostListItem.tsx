@@ -1,7 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Post, Tag } from "@/types/blog/post";
 import {
   Clock,
@@ -10,7 +11,7 @@ import {
   Tag as TagIcon,
   Star
 } from "lucide-react";
-import coverImage  from "../../../../public/wallhaven-exm8xk.jpg"
+import { useState, useEffect } from "react";
 
 /**
  * 文章列表项组件
@@ -33,8 +34,31 @@ export function PostListItem({ post, showImage = true }: PostListItemProps) {
     }).format(date);
   };
 
-  // 获取文章封面图URL
-  //const coverImage = '/public/wallhaven-exm8xk.jpg';
+  // 随机封面图状态管理
+  const [coverImage, setCoverImage] = useState<string>('/wallhaven-exm8xk.jpg');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // 获取随机封面图
+  useEffect(() => {
+    const getRandomCoverImage = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/media/random?count=1&type=image');
+        const result = await response.json();
+        
+        if (result.success && result.data.length > 0) {
+          setCoverImage(result.data[0].url);
+        }
+      } catch (error) {
+        console.error('获取随机封面图失败:', error);
+        // 保持默认图片
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getRandomCoverImage();
+  }, []);
 
   // 计算阅读时间
   const readTime = post.readTime || Math.ceil(post.content.length / 500);
@@ -49,13 +73,23 @@ export function PostListItem({ post, showImage = true }: PostListItemProps) {
         {showImage && (
           <div className="md:col-span-4 lg:col-span-3">
             <div className="relative h-48 md:h-36 lg:h-40 w-full overflow-hidden rounded-lg bg-muted">
-              <Image
-                src={coverImage}
-                alt={post.title}
-                fill
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
-              />
+              {isLoading ? (
+                <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center">
+                  <div className="text-muted-foreground text-sm">加载中...</div>
+                </div>
+              ) : (
+                <Image
+                  src={coverImage}
+                  alt={post.title}
+                  fill
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+                  onError={() => {
+                    // 图片加载失败时使用默认图片
+                    setCoverImage('/wallhaven-exm8xk.jpg');
+                  }}
+                />
+              )}
             </div>
           </div>
         )}

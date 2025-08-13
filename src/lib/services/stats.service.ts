@@ -233,7 +233,7 @@ export class StatsService {
       take: limit
     })
 
-    return tags.map((tag: any) => ({
+    return tags.map((tag: { id: string; name: string; _count: { posts: number } }) => ({
       id: tag.id,
       name: tag.name,
       postCount: tag._count.posts

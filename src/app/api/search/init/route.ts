@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import { successResponse, errorResponse } from "@/lib/utils/api/response";
 import { SearchIndexSync } from "@/lib/utils/searchIndexSync";
 
@@ -7,7 +6,7 @@ import { SearchIndexSync } from "@/lib/utils/searchIndexSync";
  * 用于应用启动时或需要时重建搜索索引
  */
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     console.log('开始重建搜索索引...');
     await SearchIndexSync.rebuildIndex();

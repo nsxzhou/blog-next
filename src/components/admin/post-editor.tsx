@@ -60,7 +60,7 @@ export function PostEditor({
   const [slug, setSlug] = useState(post?.slug || '');
   const [excerpt, setExcerpt] = useState(post?.excerpt || '');
   const [content, setContent] = useState(post?.content || '');
-  const editorRef = useRef<any>(null);
+  const editorRef = useRef<Editor | null>(null);
   const [tags, setTags] = useState<string[]>(post?.tags?.map(tag => tag.name) || []);
   const [newTag, setNewTag] = useState('');
   const [isFeatured, setIsFeatured] = useState(post?.featured || false);

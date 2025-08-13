@@ -169,7 +169,7 @@ export function MediaBatchActions() {
       // 复制链接到剪贴板
       await navigator.clipboard.writeText(links.join('\n'))
       toast.success(`已复制 ${links.length} 个文件链接`)
-    } catch (err) {
+    } catch {
       toast.error('复制链接失败')
     }
   }

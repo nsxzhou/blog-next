@@ -72,7 +72,7 @@ export interface SearchResponse {
  * 单一职责：只负责全文搜索
  */
 export class SearchService {
-  private static db: any = null
+  private static db: any | null = null
 
   /**
    * 初始化 Orama 数据库实例
@@ -84,6 +84,7 @@ export class SearchService {
 
     // 创建中文分词器
     const tokenizer = createTokenizer({
+      language: 'mandarin',
       stopWords: mandarinStopwords,
     })
 
@@ -123,6 +124,7 @@ export class SearchService {
     try {
       // 创建中文分词器
       const tokenizer = createTokenizer({
+        language: 'mandarin',
         stopWords: mandarinStopwords,
       })
 
@@ -252,7 +254,7 @@ export class SearchService {
       })
 
       // 转换搜索结果格式，包含高亮位置信息
-      const results: SearchResult[] = searchResult.hits.map((hit: any) => {
+      const results: SearchResult[] = searchResult.hits.map((hit: { document: SearchDocument; score: number }) => {
         // 为标题和摘要生成高亮信息
         const titleHighlight = highlighter.highlight(hit.document.title || '', term.trim())
         const excerptHighlight = highlighter.highlight(hit.document.excerpt || '', term.trim())

@@ -4,7 +4,6 @@ import { useState, useCallback } from 'react'
 import { useMediaFilters } from './hooks/useMediaStore'
 import { Button } from '@/components/ui/forms/Button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { 
   Select, 
   SelectContent, 
@@ -48,7 +47,7 @@ export function MediaFilters() {
     debounce((query: string) => {
       setSearchQuery(query)
     }, 500),
-    [setSearchQuery]
+    []
   )
 
   /**

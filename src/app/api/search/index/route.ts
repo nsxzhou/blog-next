@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import { successResponse, errorResponse } from "@/lib/utils/api/response";
 import { SearchService } from "@/lib/services/searchService";
 
@@ -7,7 +6,7 @@ import { SearchService } from "@/lib/services/searchService";
  * 用于重建搜索索引
  */
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // 重建整个搜索索引
     await SearchService.rebuildIndex();

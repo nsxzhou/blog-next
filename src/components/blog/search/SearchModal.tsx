@@ -95,7 +95,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
   };
 
   // 获取结果类型图标
-  const getResultIcon = (type: 'post' | 'page') => {
+  const getResultIcon = () => {
     return <FileText className="w-4 h-4" />;
   };
 
@@ -189,7 +189,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              {getResultIcon(result.type)}
+                              {getResultIcon()}
                               <span className="text-xs text-muted-foreground">
                                 {getResultTypeText(result.type)}
                               </span>

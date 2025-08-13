@@ -26,7 +26,7 @@ export class CozeService {
       return {
         success: true,
         data: {
-          id: (response as any)?.id || Date.now().toString(),
+          id: (response as { id?: string })?.id || Date.now().toString(),
           workflow_id: request.workflow_id,
           status: 'running',
           created_at: new Date().toISOString(),
