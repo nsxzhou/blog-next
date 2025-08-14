@@ -7,6 +7,7 @@ import {
 } from "@/lib/utils/validation"
 import { UpdateMediaSchema } from "@/lib/validations/media"
 import { requireAuth } from "@/lib/auth-helpers"
+import { createCOSService } from "@/lib/services/cos.service"
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -103,6 +104,29 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     try {
+      // 获取媒体文件信息
+      const media = await MediaService.getMediaById(id)
+      if (!media) {
+        return notFoundResponse("媒体文件不存在")
+      }
+
+      // 删除COS文件
+      try {
+        const cosService = createCOSService()
+        const deleteResult = await cosService.deleteFile(media.path)
+        
+        if (!deleteResult.success) {
+          console.error(`COS文件删除失败: ${media.path}`, deleteResult.error)
+          // COS删除失败时，可以选择是否继续删除数据库记录
+          // 这里选择继续删除，避免数据库中出现孤立记录
+        }
+      } catch (cosError) {
+        console.error('COS删除失败:', cosError)
+        // COS删除失败时，可以选择是否继续删除数据库记录
+        // 这里选择继续删除，避免数据库中出现孤立记录
+      }
+
+      // 删除数据库记录
       await MediaService.deleteMedia(id)
       return successResponse(null, "删除媒体文件成功")
     } catch (serviceError) {

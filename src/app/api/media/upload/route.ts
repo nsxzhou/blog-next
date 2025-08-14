@@ -4,9 +4,7 @@ import { MediaService } from "@/lib/services/media.service"
 import { validateRequest, handleValidationError } from "@/lib/utils/validation"
 import { CreateMediaSchema, getMediaType, formatFileSize } from "@/lib/validations/media"
 import { requireAuth } from "@/lib/auth-helpers"
-import { writeFile, mkdir } from "fs/promises"
-import { join } from "path"
-import { existsSync } from "fs"
+import { createCOSService } from "@/lib/services/cos.service"
 import crypto from "crypto"
 
 // 配置常量
@@ -22,9 +20,7 @@ const UPLOAD_CONFIG = {
     // 文档
     'application/pdf', 'text/plain', 'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-  ],
-  uploadDir: 'public/uploads',
-  publicUrl: '/uploads'
+  ]
 }
 
 /**
@@ -37,16 +33,6 @@ function generateUniqueFilename(originalName: string): string {
   const hash = crypto.randomUUID()
   const timestamp = Date.now()
   return `${timestamp}-${hash}.${ext}`
-}
-
-/**
- * 确保上传目录存在
- * @param uploadPath 上传路径
- */
-async function ensureUploadDir(uploadPath: string): Promise<void> {
-  if (!existsSync(uploadPath)) {
-    await mkdir(uploadPath, { recursive: true })
-  }
 }
 
 /**
@@ -97,48 +83,49 @@ export async function POST(request: NextRequest) {
       return errorResponse("INVALID_FILE", validation.error!, 400)
     }
 
-    // 生成文件名和路径
+    // 生成文件名和COS键
     const filename = generateUniqueFilename(file.name)
     const mediaType = getMediaType(file.type)
     const yearMonth = new Date().toISOString().slice(0, 7) // YYYY-MM 格式
-    const relativePath = join(mediaType, yearMonth)
-    const fullUploadDir = join(process.cwd(), UPLOAD_CONFIG.uploadDir, relativePath)
-    const filePath = join(fullUploadDir, filename)
-    
-    // 确保上传目录存在
-    await ensureUploadDir(fullUploadDir)
+    const cosKey = `${mediaType}/${yearMonth}/${filename}`
 
-    // 读取文件数据并保存
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    await writeFile(filePath, buffer)
+    try {
+      // 初始化COS服务
+      const cosService = createCOSService()
 
-    // 构建URL路径
-    const url = `${UPLOAD_CONFIG.publicUrl}/${relativePath}/${filename}`.replace(/\\/g, '/')
-    const dbPath = join(relativePath, filename).replace(/\\/g, '/')
+      // 上传文件到COS
+      const uploadResult = await cosService.uploadFile(file, cosKey)
 
-    // 创建媒体记录
-    const mediaData = {
-      filename,
-      originalName: file.name,
-      path: dbPath,
-      url,
-      mimeType: file.type,
-      size: file.size,
-      alt: alt || undefined
+      // 创建媒体记录
+      const mediaData = {
+        filename,
+        originalName: file.name,
+        path: cosKey,
+        url: uploadResult.url,
+        mimeType: file.type,
+        size: file.size,
+        alt: alt || undefined
+      }
+
+      // 验证数据
+      const validatedData = await validateRequest(CreateMediaSchema, mediaData)
+      
+      // 保存到数据库
+      const media = await MediaService.createMedia(validatedData)
+
+      return successResponse(
+        { media },
+        `文件上传成功，大小: ${formatFileSize(file.size)}`,
+        201
+      )
+    } catch (cosError) {
+      console.error('COS上传失败:', cosError)
+      return errorResponse(
+        "COS_UPLOAD_ERROR",
+        cosError instanceof Error ? cosError.message : "文件上传失败",
+        500
+      )
     }
-
-    // 验证数据
-    const validatedData = await validateRequest(CreateMediaSchema, mediaData)
-    
-    // 保存到数据库
-    const media = await MediaService.createMedia(validatedData)
-
-    return successResponse(
-      { media },
-      `文件上传成功，大小: ${formatFileSize(file.size)}`,
-      201
-    )
 
   } catch (error) {
     if (error instanceof Error && error.message === "未授权访问") {
@@ -147,13 +134,9 @@ export async function POST(request: NextRequest) {
     
     console.error("文件上传失败:", error)
     
-    // 如果是文件系统错误
-    if (error instanceof Error && error.message.includes('EACCES')) {
-      return errorResponse("FILESYSTEM_ERROR", "文件系统权限不足", 500)
-    }
-    
-    if (error instanceof Error && error.message.includes('ENOSPC')) {
-      return errorResponse("STORAGE_FULL", "存储空间不足", 507)
+    // 如果是COS配置错误
+    if (error instanceof Error && error.message.includes('COS配置不完整')) {
+      return errorResponse("COS_CONFIG_ERROR", "COS配置不完整，请检查环境变量", 500)
     }
 
     return handleValidationError(error)

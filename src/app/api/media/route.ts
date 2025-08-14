@@ -12,6 +12,7 @@ import {
   BatchDeleteMediaSchema 
 } from "@/lib/validations/media"
 import { requireAuth } from "@/lib/auth-helpers"
+import { createCOSService } from "@/lib/services/cos.service"
 
 /**
  * 获取媒体文件列表 - GET /api/media
@@ -78,10 +79,41 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
+    // 获取要删除的媒体文件列表
+    const mediaList = await Promise.all(
+      ids.map(id => MediaService.getMediaById(id))
+    )
+    
+    const validMedia = mediaList.filter(media => media !== null)
+    const cosKeys = validMedia.map(media => media!.path)
+    
+    // 批量删除COS文件
+    let cosDeleteSuccess = true
+    try {
+      const cosService = createCOSService()
+      const deleteResults = await cosService.batchDeleteFiles(cosKeys)
+      
+      // 检查是否有删除失败的文件
+      const failedDeletes = deleteResults.filter(result => !result.success)
+      if (failedDeletes.length > 0) {
+        console.error('部分COS文件删除失败:', failedDeletes)
+        cosDeleteSuccess = false
+      }
+    } catch (cosError) {
+      console.error('COS批量删除失败:', cosError)
+      cosDeleteSuccess = false
+    }
+
+    // 删除数据库记录
     const deletedCount = await MediaService.batchDeleteMedia(ids)
+    
+    const message = cosDeleteSuccess 
+      ? `成功删除 ${deletedCount} 个媒体文件`
+      : `成功删除 ${deletedCount} 个媒体文件，部分COS文件删除失败，请检查日志`
+    
     return successResponse(
-      { deletedCount },
-      `成功删除 ${deletedCount} 个媒体文件`
+      { deletedCount, cosDeleteSuccess },
+      message
     )
   } catch (error) {
     if (error instanceof Error && error.message === "未授权访问") {

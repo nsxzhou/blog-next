@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       'images.pexels.com',
       'images.unsplash.com',
       'source.unsplash.com',
+      'blog-next-1324789722.cos.ap-guangzhou.myqcloud.com',
     ],
     remotePatterns: [
       {
@@ -28,6 +29,11 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'source.unsplash.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'blog-next-1324789722.cos.ap-guangzhou.myqcloud.com',
         pathname: '/**',
       },
     ],
