@@ -137,12 +137,12 @@ export default function AdminDashboard() {
       icon: FileText,
       description: "创建新的博客文章",
     },
-    {
-      title: "新建页面",
-      href: "/admin/pages/new",
-      icon: File,
-      description: "创建新的静态页面",
-    },
+    // {
+    //   title: "新建页面",
+    //   href: "/admin/pages/new",
+    //   icon: File,
+    //   description: "创建新的静态页面",
+    // },
     {
       title: "上传媒体",
       href: "/admin/media",
