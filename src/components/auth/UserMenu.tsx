@@ -73,12 +73,12 @@ export function UserMenu() {
             <DropdownMenuSeparator />
           </>
         )}
-        <DropdownMenuItem asChild>
+        {/* <DropdownMenuItem asChild>
           <Link href="/profile" className="flex items-center w-full">
             <User className="mr-2 h-4 w-4" />
             <span>个人资料</span>
           </Link>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
         <DropdownMenuItem
           onClick={() => {
             ToastHelper.success("已退出登录");
