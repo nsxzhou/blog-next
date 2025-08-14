@@ -76,7 +76,7 @@ export function PostsList({ posts, currentPage, totalPages }: PostsListProps) {
           {/* 文章列表 */}
           <div className="space-y-0">
             {publishedPosts.map((post) => (
-              <PostListItem key={post.id} post={post} showImage={true} />
+              <PostListItem key={post.id} post={post} />
             ))}
           </div>
 
