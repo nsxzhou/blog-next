@@ -75,7 +75,7 @@ export function TableOfContents({ content, className }: TableOfContentsProps) {
       <div className="mb-4">
         <h3 className="text-lg font-semibold">目录</h3>
       </div>
-      <div className="max-h-96 overflow-y-auto space-y-1">
+      <div className="max-h-96 overflow-y-auto space-y-1 scrollbar-hide">
         {tocItems.map(({ id, text, level }) => (
           <button
             key={id}
