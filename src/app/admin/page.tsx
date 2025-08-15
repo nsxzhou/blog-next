@@ -3,61 +3,16 @@
 import { useSession } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/forms/Button"
-import { FileText, File, Tags, Image, Users, Eye, TrendingUp, Plus, ArrowRight, Loader2 } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
+import { FileText, File, Tags, Image, Users, Eye, TrendingUp, Plus, ArrowRight } from "lucide-react"
 import Link from "next/link"
-import { useEffect, useState } from "react"
-
-interface DashboardStats {
-  totalPosts: number
-  publishedPosts: number
-  draftPosts: number
-  archivedPosts: number
-  totalPages: number
-  publishedPages: number
-  draftPages: number
-  archivedPages: number
-  totalTags: number
-  totalMedia: number
-  totalUsers: number
-  activeUsers: number
-  totalViews: number
-  recentPosts: Array<{
-    id: string
-    title: string
-    publishedAt: string | null
-    viewCount: number
-    status: "DRAFT" | "PUBLISHED" | "ARCHIVED"
-  }>
-}
+import { useDashboardStats } from "@/lib/hooks/useStats"
 
 export default function AdminDashboard() {
   const { data: session } = useSession()
-  const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/stats?type=dashboard')
-        if (!response.ok) {
-          throw new Error('获取统计数据失败')
-        }
-        const data = await response.json()
-        if (data.success) {
-          setStats(data.data)
-        } else {
-          throw new Error(data.message || '获取统计数据失败')
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '获取统计数据失败')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchStats()
-  }, [])
+  const { data: stats, isLoading, error, isError } = useDashboardStats()
 
   const formatNumber = (num: number): string => {
     return new Intl.NumberFormat('zh-CN').format(num)
@@ -151,16 +106,7 @@ export default function AdminDashboard() {
     },
   ]
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">加载统计数据...</span>
-      </div>
-    )
-  }
-
-  if (error) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div>
@@ -169,16 +115,45 @@ export default function AdminDashboard() {
             欢迎回来，{session?.user?.name || session?.user?.username}
           </p>
         </div>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800">加载统计数据时出错: {error}</p>
-          <Button 
-            onClick={() => window.location.reload()} 
-            className="mt-2"
-            variant="outline"
-          >
-            重试
-          </Button>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <Card key={index}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  <Skeleton className="h-4 w-16" />
+                </CardTitle>
+                <Skeleton className="h-4 w-4" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  <Skeleton className="h-8 w-12" />
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  <Skeleton className="h-3 w-20 mt-1" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">仪表板</h1>
+          <p className="text-muted-foreground">
+            欢迎回来，{session?.user?.name || session?.user?.username}
+          </p>
+        </div>
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {error instanceof Error ? error.message : '加载统计数据失败'}
+          </AlertDescription>
+        </Alert>
       </div>
     )
   }
@@ -254,7 +229,7 @@ export default function AdminDashboard() {
                   暂无文章
                 </div>
               ) : (
-                recentPosts.map((post) => (
+                recentPosts.map((post: { id: string; title: string; publishedAt: string | null; viewCount: number; status: "DRAFT" | "PUBLISHED" | "ARCHIVED" }) => (
                   <div key={post.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">

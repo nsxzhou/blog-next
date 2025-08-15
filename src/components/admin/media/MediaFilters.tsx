@@ -47,7 +47,7 @@ export function MediaFilters() {
     debounce((query: string) => {
       setSearchQuery(query)
     }, 500),
-    []
+    [setSearchQuery]
   )
 
   /**

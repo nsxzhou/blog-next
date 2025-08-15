@@ -18,7 +18,6 @@ import {
   Sun,
   Moon,
   ChevronUp,
-  User,
 } from "lucide-react"
 
 import {

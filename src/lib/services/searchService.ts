@@ -5,6 +5,7 @@ import { Highlight } from '@orama/highlight'
 import { extractTextFromMarkdown } from '@/lib/utils/markdown'
 import { PostService } from './post.service'
 import { PageService } from './page.service'
+import type { Orama } from '@orama/orama'
 
 /**
  * 搜索文档接口 - 统一的搜索数据结构
@@ -72,12 +73,12 @@ export interface SearchResponse {
  * 单一职责：只负责全文搜索
  */
 export class SearchService {
-  private static db: any | null = null
+  private static db: Orama<any> | null = null
 
   /**
    * 初始化 Orama 数据库实例
    */
-  private static async initializeDB(): Promise<any> {
+  private static async initializeDB(): Promise<Orama<any>> {
     if (this.db) {
       return this.db
     }
@@ -254,7 +255,7 @@ export class SearchService {
       })
 
       // 转换搜索结果格式，包含高亮位置信息
-      const results: SearchResult[] = searchResult.hits.map((hit: { document: SearchDocument; score: number }) => {
+      const results: SearchResult[] = searchResult.hits.map((hit: any) => {
         // 为标题和摘要生成高亮信息
         const titleHighlight = highlighter.highlight(hit.document.title || '', term.trim())
         const excerptHighlight = highlighter.highlight(hit.document.excerpt || '', term.trim())
